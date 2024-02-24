@@ -26,9 +26,15 @@ lint = [
     "mypy>=1.8.0",
     "pre-commit>=3.6.2",
 ]
+test = [
+    "pytest>=8.0.2",
+    "pytest-asyncio>=0.23.5",
+    "pytest-cov>=4.1.0",
+]
 
 [tool.pdm.scripts]
 lint = "pre-commit run --all-files"
+test = "pytest tests"
 
 [build-system]
 requires = ["setuptools>=61", "wheel"]
