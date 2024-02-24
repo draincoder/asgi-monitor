@@ -36,7 +36,7 @@ jobs:
         run: pre-commit run --show-diff-on-failure --color=always --all-files
 
   test:
-    name: "Test (${{ matrix.python-version }})"
+    name: "test ${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
