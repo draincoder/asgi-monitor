@@ -28,7 +28,7 @@ class MetricsContainer:
             )
         return cast("Gauge", MetricsContainer._metrics[metric_name])
 
-    def requests_count(self) -> Counter:
+    def request_count(self) -> Counter:
         metric_name = f"{self._prefix}_requests_total"
 
         if metric_name not in MetricsContainer._metrics:
@@ -39,7 +39,7 @@ class MetricsContainer:
             )
         return cast("Counter", MetricsContainer._metrics[metric_name])
 
-    def responses_count(self) -> Counter:
+    def response_count(self) -> Counter:
         metric_name = f"{self._prefix}_responses_total"
 
         if metric_name not in MetricsContainer._metrics:
@@ -50,13 +50,13 @@ class MetricsContainer:
             )
         return cast("Counter", MetricsContainer._metrics[metric_name])
 
-    def requests_processing_time(self) -> Histogram:
-        metric_name = f"{self._prefix}_requests_duration_seconds"
+    def request_duration(self) -> Histogram:
+        metric_name = f"{self._prefix}_request_duration_seconds"
 
         if metric_name not in MetricsContainer._metrics:
             MetricsContainer._metrics[metric_name] = Histogram(
                 name=metric_name,
-                documentation="Histogram of requests processing time by path, in seconds",
+                documentation="Histogram of request duration by path, in seconds",
                 labelnames=["app_name", "method", "path"],
             )
         return cast("Histogram", MetricsContainer._metrics[metric_name])

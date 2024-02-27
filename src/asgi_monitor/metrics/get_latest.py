@@ -11,7 +11,10 @@ from prometheus_client import (
 from prometheus_client.openmetrics.exposition import CONTENT_TYPE_LATEST as OPENMETRICS_CONTENT_TYPE_LATEST
 from prometheus_client.openmetrics.exposition import generate_latest as openmetrics_generate_latest
 
-__all__ = ("get_latest_metrics", "MetricsResponse")
+__all__ = (
+    "MetricsResponse",
+    "get_latest_metrics",
+)
 
 
 @dataclass(frozen=True, slots=True)
