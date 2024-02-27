@@ -1,3 +1,5 @@
+# https://habr.com/ru/companies/domclick/articles/773136/
+
 import os
 from dataclasses import dataclass
 

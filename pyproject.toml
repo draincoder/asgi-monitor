@@ -35,6 +35,8 @@ test = [
     "pytest-asyncio>=0.23.5",
     "pytest-cov>=4.1.0",
     "assertpy>=1.1",
+    "freezegun>=1.4.0",
+    "dirty-equals>=0.7.1.post0",
 ]
 asgi = [
     "uvicorn>=0.27.1",
@@ -78,7 +80,7 @@ lint.ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["TID252", "PLR2004", "S101"]
+"tests/**" = ["TID252", "PLR2004", "S101", "T201", "SLF001"]
 "examples/**" = ["T201", "B018"]
 
 [tool.ruff.lint.mccabe]
