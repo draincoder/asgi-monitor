@@ -6,12 +6,14 @@ from dirty_equals import IsStr
 from freezegun import freeze_time
 from prometheus_client.metrics import Exemplar, Metric, Sample
 
-from asgi_monitor.metrics._container import MetricsContainer
+from asgi_monitor.metrics.container import MetricsContainer
+from asgi_monitor.metrics.manager import MetricsManager
 
-APP_NAME = "asgi-monitor"
+FROZEN_DATETIME = datetime(year=2024, month=2, day=28, hour=0, minute=40, second=50, tzinfo=timezone.utc)
+FROZEN_TIMESTAMP = 1709080850.0
 
 
-def test_app_info(container: MetricsContainer) -> None:
+def test_app_info(container: MetricsContainer, manager: MetricsManager) -> None:
     # Arrange
     expected = Metric(
         name="test_app_info",
@@ -30,15 +32,15 @@ def test_app_info(container: MetricsContainer) -> None:
     ]
 
     # Act
-    container.app_info().labels(app_name=APP_NAME).inc()
+    manager.add_app_info()
 
     # Assert
     app_info = container.app_info().collect()
     assert_that(app_info).is_equal_to([expected])
 
 
-@freeze_time(datetime(year=2024, month=2, day=28, hour=0, minute=40, second=50, tzinfo=timezone.utc))
-def test_request_count(container: MetricsContainer) -> None:
+@freeze_time(FROZEN_DATETIME)
+def test_request_count(container: MetricsContainer, manager: MetricsManager) -> None:
     # Arrange
     expected = Metric(
         name="test_requests",
@@ -57,22 +59,22 @@ def test_request_count(container: MetricsContainer) -> None:
         Sample(
             name="test_requests_created",
             labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
-            value=1709080850.0,
+            value=FROZEN_TIMESTAMP,
             timestamp=None,
             exemplar=None,
         ),
     ]
 
     # Act
-    container.request_count().labels(app_name=APP_NAME, method="GET", path="/metrics/").inc()
+    manager.inc_requests_count(method="GET", path="/metrics/")
 
     # Assert
     request_count = container.request_count().collect()
     assert_that(request_count).is_equal_to([expected])
 
 
-@freeze_time(datetime(year=2024, month=2, day=28, hour=0, minute=40, second=50, tzinfo=timezone.utc))
-def test_response_count(container: MetricsContainer) -> None:
+@freeze_time(FROZEN_DATETIME)
+def test_response_count(container: MetricsContainer, manager: MetricsManager) -> None:
     # Arrange
     expected = Metric(
         name="test_responses",
@@ -91,22 +93,22 @@ def test_response_count(container: MetricsContainer) -> None:
         Sample(
             name="test_responses_created",
             labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "status_code": "200"},
-            value=1709080850.0,
+            value=FROZEN_TIMESTAMP,
             timestamp=None,
             exemplar=None,
         ),
     ]
 
     # Act
-    container.response_count().labels(app_name=APP_NAME, method="GET", path="/metrics/", status_code=200).inc()
+    manager.inc_responses_count(method="GET", path="/metrics/", status_code=200)
 
     # Assert
     response_count = container.response_count().collect()
     assert_that(response_count).is_equal_to([expected])
 
 
-@freeze_time(datetime(year=2024, month=2, day=28, hour=0, minute=40, second=50, tzinfo=timezone.utc))
-def test_request_duration(container: MetricsContainer) -> None:
+@freeze_time(FROZEN_DATETIME)
+def test_request_duration(container: MetricsContainer, manager: MetricsManager) -> None:
     # Arrange
     expected = (
         "test_request_duration_seconds",
@@ -119,7 +121,7 @@ def test_request_duration(container: MetricsContainer) -> None:
         labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "le": IsStr},
         value=1.0,
         timestamp=None,
-        exemplar=Exemplar(labels={"TraceID": "1234567"}, value=0.0, timestamp=1709080850.0),
+        exemplar=Exemplar(labels={"TraceID": "1234567"}, value=0.0, timestamp=FROZEN_TIMESTAMP),
     )
     expected_sample_bucket_without_exemplar = Sample(
         name="test_request_duration_seconds_bucket",
@@ -145,7 +147,7 @@ def test_request_duration(container: MetricsContainer) -> None:
     expected_sample_created = Sample(
         name="test_request_duration_seconds_created",
         labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
-        value=1709080850.0,
+        value=FROZEN_TIMESTAMP,
         timestamp=None,
         exemplar=None,
     )
@@ -154,12 +156,10 @@ def test_request_duration(container: MetricsContainer) -> None:
     before_time = time.perf_counter()
 
     # Act
-    container.request_duration().labels(
-        app_name=APP_NAME,
+    manager.observe_request_duration(
         method="GET",
         path="/metrics/",
-    ).observe(
-        after_time - before_time,
+        duration=after_time - before_time,
         exemplar={"TraceID": "1234567"},
     )
 
@@ -178,7 +178,7 @@ def test_request_duration(container: MetricsContainer) -> None:
         assert_that(sample).is_equal_to(expected_sample_bucket_without_exemplar)
 
 
-def test_requests_in_progress_inc(container: MetricsContainer) -> None:
+def test_requests_in_progress_inc(container: MetricsContainer, manager: MetricsManager) -> None:
     # Arrange
     expected = Metric(
         name="test_requests_in_progress",
@@ -197,14 +197,14 @@ def test_requests_in_progress_inc(container: MetricsContainer) -> None:
     ]
 
     # Act
-    container.requests_in_progress().labels(app_name=APP_NAME, method="GET", path="/metrics/").inc()
+    manager.add_request_in_progress(method="GET", path="/metrics/")
 
     # Assert
     requests_in_progress = container.requests_in_progress().collect()
     assert_that(requests_in_progress).is_equal_to([expected])
 
 
-def test_requests_in_progress_dec(container: MetricsContainer) -> None:
+def test_requests_in_progress_dec(container: MetricsContainer, manager: MetricsManager) -> None:
     # Arrange
     expected = Metric(
         name="test_requests_in_progress",
@@ -223,16 +223,16 @@ def test_requests_in_progress_dec(container: MetricsContainer) -> None:
     ]
 
     # Act
-    container.requests_in_progress().labels(app_name=APP_NAME, method="GET", path="/metrics/").inc()
-    container.requests_in_progress().labels(app_name=APP_NAME, method="GET", path="/metrics/").dec()
+    manager.add_request_in_progress(method="GET", path="/metrics/")
+    manager.remove_request_in_progress(method="GET", path="/metrics/")
 
     # Assert
     requests_in_progress = container.requests_in_progress().collect()
     assert_that(requests_in_progress).is_equal_to([expected])
 
 
-@freeze_time(datetime(year=2024, month=2, day=28, hour=0, minute=40, second=50, tzinfo=timezone.utc))
-def test_requests_exceptions_count(container: MetricsContainer) -> None:
+@freeze_time(FROZEN_DATETIME)
+def test_requests_exceptions_count(container: MetricsContainer, manager: MetricsManager) -> None:
     # Arrange
     expected = Metric(
         name="test_requests_exceptions",
@@ -251,19 +251,18 @@ def test_requests_exceptions_count(container: MetricsContainer) -> None:
         Sample(
             name="test_requests_exceptions_created",
             labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "exception_type": "RuntimeError"},
-            value=1709080850.0,
+            value=FROZEN_TIMESTAMP,
             timestamp=None,
             exemplar=None,
         ),
     ]
 
     # Act
-    container.requests_exceptions_count().labels(
-        app_name=APP_NAME,
+    manager.inc_requests_exceptions_count(
         method="GET",
         path="/metrics/",
         exception_type=type(RuntimeError()).__name__,
-    ).inc()
+    )
 
     # Assert
     requests_exceptions_count = container.requests_exceptions_count().collect()

@@ -1,11 +1,17 @@
 import pytest
 
-from asgi_monitor.metrics._container import MetricsContainer
+from asgi_monitor.metrics.container import MetricsContainer
+from asgi_monitor.metrics.manager import MetricsManager
 
 
 @pytest.fixture(scope="session")
 def container() -> MetricsContainer:
     return MetricsContainer(prefix="test")
+
+
+@pytest.fixture(scope="session")
+def manager(container: MetricsContainer) -> MetricsManager:
+    return MetricsManager(app_name="asgi-monitor", container=container)
 
 
 @pytest.fixture(autouse=True)
