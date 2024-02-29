@@ -29,7 +29,7 @@ class MetricsResponse:
 def get_latest_metrics(openmetrics_format: bool = False) -> MetricsResponse:
     registry = REGISTRY
 
-    if "prometheus_multiproc_dir" in os.environ or "PROMETHEUS_MULTIPROC_DIR" in os.environ:
+    if "PROMETHEUS_MULTIPROC_DIR" in os.environ:
         registry = CollectorRegistry()
         multiprocess.MultiProcessCollector(registry)
 

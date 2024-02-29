@@ -1,3 +1,5 @@
+import os
+
 import pytest
 
 from asgi_monitor.metrics.container import MetricsContainer
@@ -18,3 +20,8 @@ def manager(container: MetricsContainer) -> MetricsManager:
 def _clear_metrics(container: MetricsContainer) -> None:
     for metric in container._metrics.values():
         metric.clear()
+
+
+@pytest.fixture(autouse=True)
+def _clear_env() -> None:
+    os.environ.pop("PROMETHEUS_MULTIPROC_DIR", None)
