@@ -1,6 +1,7 @@
 import os
 import shutil
 import tempfile
+import time
 from multiprocessing import Process
 
 from assertpy import assert_that
@@ -72,6 +73,8 @@ def test_get_latest_metrics_multiprocess(manager: MetricsManager) -> None:
     for process in processes:
         process.join()
 
+    time.sleep(1)
+
     expected = MetricsResponse(
         status_code=200,
         headers={"Content-Type": "text/plain; version=0.0.4; charset=utf-8"},
@@ -84,7 +87,7 @@ def test_get_latest_metrics_multiprocess(manager: MetricsManager) -> None:
     # Clean tempdir
     shutil.rmtree(tempdir)
 
-    # Arrange
+    # Assert
     assert_that(response).is_equal_to(expected)
     assert_that(response.payload.decode()).contains(
         'test_requests_total{app_name="asgi-monitor",method="GET",path="/metrics/"} 10.0',
