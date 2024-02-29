@@ -1,7 +1,6 @@
 import os
 import shutil
 import tempfile
-import time
 from multiprocessing import Process
 
 from assertpy import assert_that
@@ -72,8 +71,6 @@ def test_get_latest_metrics_multiprocess(manager: MetricsManager) -> None:
 
     for process in processes:
         process.join()
-
-    time.sleep(1)
 
     expected = MetricsResponse(
         status_code=200,
