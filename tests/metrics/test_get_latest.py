@@ -74,12 +74,12 @@ def test_get_latest_metrics_multiprocess(manager: MetricsManager) -> None:
 
     expected = MetricsResponse(
         status_code=200,
-        headers={"Content-Type": "application/openmetrics-text; version=1.0.0; charset=utf-8"},
+        headers={"Content-Type": "text/plain; version=0.0.4; charset=utf-8"},
         payload=IsBytes,
     )
 
     # Act
-    response = get_latest_metrics(openmetrics_format=True)
+    response = get_latest_metrics(openmetrics_format=False)
 
     # Clean tempdir
     shutil.rmtree(tempdir)
