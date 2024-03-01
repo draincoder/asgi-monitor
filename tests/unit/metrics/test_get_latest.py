@@ -7,6 +7,7 @@ from assertpy import assert_that
 from dirty_equals import IsBytes
 
 from asgi_monitor.metrics import get_latest_metrics
+from asgi_monitor.metrics.container import MetricsContainer
 from asgi_monitor.metrics.get_latest import MetricsResponse
 from asgi_monitor.metrics.manager import MetricsManager
 
@@ -53,17 +54,20 @@ def test_get_latest_openmetrics_true(manager: MetricsManager) -> None:
     )
 
 
-def add_metrics(manager: MetricsManager) -> None:
-    manager.inc_requests_count(method="GET", path="/metrics/")
-    manager.inc_requests_count(method="GET", path="/token/")
-    manager.inc_requests_count(method="GET", path="/login/")
+def add_metrics() -> None:
+    manager = MetricsManager(app_name="asgi-monitor", container=MetricsContainer("test"))
+
+    for _ in range(10):
+        manager.inc_requests_count(method="GET", path="/metrics/")
+        manager.inc_requests_count(method="GET", path="/token/")
+        manager.inc_requests_count(method="GET", path="/login/")
 
 
-def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) -> None:
+def test_get_latest_metrics_multiprocess(tmpdir: Path) -> None:
     # Arrange
     multiprocessing.set_start_method("spawn")
     os.environ["PROMETHEUS_MULTIPROC_DIR"] = str(tmpdir)
-    processes = [Process(target=add_metrics, args=(manager,)) for _ in range(10)]
+    processes = [Process(target=add_metrics) for _ in range(10)]
 
     for process in processes:
         process.start()
@@ -83,7 +87,7 @@ def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) 
     # Assert
     assert_that(response).is_equal_to(expected)
     assert_that(response.payload.decode()).contains(
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/metrics/"} 10.0',
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/token/"} 10.0',
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/login/"} 10.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/metrics/"} 100.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/token/"} 100.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/login/"} 100.0',
     )
