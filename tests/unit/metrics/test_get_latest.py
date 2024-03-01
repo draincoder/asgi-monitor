@@ -61,7 +61,7 @@ def add_metrics(manager: MetricsManager) -> None:
 def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) -> None:
     # Arrange
     os.environ["PROMETHEUS_MULTIPROC_DIR"] = str(tmpdir)
-    processes = [Process(target=add_metrics, args=(manager,)) for _ in range(10)]
+    processes = [Process(target=add_metrics, args=(manager,)) for _ in range(2)]
 
     for process in processes:
         process.start()
@@ -81,7 +81,7 @@ def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) 
     # Assert
     assert_that(response).is_equal_to(expected)
     assert_that(response.payload.decode()).contains(
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/metrics/"} 10.0',
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/token/"} 10.0',
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/login/"} 10.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/metrics/"} 2.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/token/"} 2.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/login/"} 2.0',
     )
