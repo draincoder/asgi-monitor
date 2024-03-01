@@ -1,7 +1,6 @@
 import os
-import shutil
-import tempfile
 from multiprocessing import Process
+from pathlib import Path
 
 from assertpy import assert_that
 from dirty_equals import IsBytes
@@ -59,11 +58,9 @@ def add_metrics(manager: MetricsManager) -> None:
     manager.inc_requests_count(method="GET", path="/login/")
 
 
-def test_get_latest_metrics_multiprocess(manager: MetricsManager) -> None:
+def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) -> None:
     # Arrange
-    tempdir = tempfile.mkdtemp()
-    os.environ["PROMETHEUS_MULTIPROC_DIR"] = tempdir
-
+    os.environ["PROMETHEUS_MULTIPROC_DIR"] = str(tmpdir)
     processes = [Process(target=add_metrics, args=(manager,)) for _ in range(10)]
 
     for process in processes:
@@ -80,9 +77,6 @@ def test_get_latest_metrics_multiprocess(manager: MetricsManager) -> None:
 
     # Act
     response = get_latest_metrics(openmetrics_format=False)
-
-    # Clean tempdir
-    shutil.rmtree(tempdir)
 
     # Assert
     assert_that(response).is_equal_to(expected)
