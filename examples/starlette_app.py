@@ -11,14 +11,14 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 
-from asgi_monitor.integrations.starlette import TracingConfig, setup_monitoring
+from asgi_monitor.integrations.starlette import TracingConfig, setup_metrics, setup_tracing
 from asgi_monitor.logging import configure_logging
 from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
 
 logger = logging.getLogger(__name__)
 
 
-async def index(_: Request) -> PlainTextResponse:
+async def index(request: Request) -> PlainTextResponse:
     logger.info("Start sleeping at %s", datetime.now(tz=timezone.utc))
     await asyncio.sleep(1)
     logger.info("Stopped sleeping at %s", datetime.now(tz=timezone.utc))
@@ -38,7 +38,8 @@ def create_app() -> Starlette:
     config = TracingConfig(tracer_provider=tracer)
 
     app = Starlette(debug=True, routes=[Route("/", endpoint=index, methods=["GET"])])
-    setup_monitoring(app=app, config=config)
+    setup_tracing(app=app, config=config)
+    setup_metrics(app, app_name="starlette", include_trace=True, include_metrics_endpoint=True)
 
     return app
 

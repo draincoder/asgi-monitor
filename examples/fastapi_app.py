@@ -8,7 +8,7 @@ from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 
-from asgi_monitor.integrations.fastapi import TracingConfig, setup_monitoring
+from asgi_monitor.integrations.fastapi import TracingConfig, setup_metrics, setup_tracing
 from asgi_monitor.logging import configure_logging
 from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
 
@@ -38,7 +38,8 @@ def create_app() -> FastAPI:
 
     app = FastAPI(debug=True)
     app.include_router(router)
-    setup_monitoring(app=app, config=config)
+    setup_tracing(app=app, config=config)
+    setup_metrics(app, app_name="fastapi", include_trace=True, include_metrics_endpoint=True)
 
     return app
 
