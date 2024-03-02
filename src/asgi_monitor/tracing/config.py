@@ -1,11 +1,9 @@
 # https://github.com/open-telemetry/opentelemetry-python-contrib/blob/main/instrumentation/opentelemetry-instrumentation-fastapi/src/opentelemetry/instrumentation/fastapi/__init__.py
 # https://github.com/litestar-org/litestar/blob/main/litestar/contrib/opentelemetry/config.py
-
-from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Callable
 
-__all__ = ("TracingConfig",)
+__all__ = ("_TracingConfig",)
 
 
 from opentelemetry.metrics import Meter, MeterProvider
@@ -15,7 +13,7 @@ OpenTelemetryHookHandler = Callable[[Span, dict], None]
 
 
 @dataclass
-class TracingConfig:
+class _TracingConfig:
     exclude_urls_env_key: str
     scope_span_details_extractor: Callable[[Any], tuple[str, dict[str, Any]]]
     server_request_hook_handler: OpenTelemetryHookHandler | None = field(default=None)
