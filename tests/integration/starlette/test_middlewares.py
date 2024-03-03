@@ -61,6 +61,38 @@ async def test_tracing() -> None:
 async def test_tracing_with_empty_routes() -> None:
     # Arrange
     trace_config, exporter = build_starlette_tracing_config()
+    app = Starlette(routes=[Route("/", endpoint=index, methods=["POST"])])
+    setup_tracing(app=app, config=trace_config)
+
+    # Act
+    async with starlette_app(app) as client:
+        response = client.get("/")
+
+        # Assert
+        first_span, second_span, third_span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
+        assert response.status_code == 405
+        assert_that(first_span.attributes).is_equal_to({"http.status_code": 405, "type": "http.response.start"})
+        assert_that(second_span.attributes).is_equal_to({"type": "http.response.body"})
+        assert_that(third_span.attributes).is_equal_to(
+            {
+                "http.scheme": "http",
+                "http.host": "testserver",
+                "net.host.port": 80,
+                "http.flavor": "1.1",
+                "http.target": "/",
+                "http.url": "http://testserver/",
+                "http.method": "GET",
+                "http.server_name": "testserver",
+                "http.user_agent": "testclient",
+                "http.status_code": 405,
+                "http.route": "/",
+            },
+        )
+
+
+async def test_tracing_partial_match() -> None:
+    # Arrange
+    trace_config, exporter = build_starlette_tracing_config()
     app = Starlette()
     setup_tracing(app=app, config=trace_config)
 
