@@ -38,8 +38,8 @@ def create_app() -> Starlette:
     config = TracingConfig(tracer_provider=tracer)
 
     app = Starlette(debug=True, routes=[Route("/", endpoint=index, methods=["GET"])])
-    setup_tracing(app=app, config=config)
     setup_metrics(app, app_name="starlette", include_trace=True, include_metrics_endpoint=True)
+    setup_tracing(app=app, config=config)
 
     return app
 

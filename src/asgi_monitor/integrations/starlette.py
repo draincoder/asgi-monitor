@@ -54,8 +54,6 @@ def _get_default_span_details(scope: Scope) -> tuple[str, dict[str, Any]]:
         attributes[SpanAttributes.HTTP_ROUTE] = route
     if method and route:  # http
         span_name = f"{method} {route}"
-    elif route:  # websocket
-        span_name = route
     else:  # fallback
         span_name = method
     return span_name, attributes
