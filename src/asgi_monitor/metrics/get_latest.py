@@ -26,7 +26,7 @@ class MetricsResponse:
     payload: bytes
 
 
-def get_latest_metrics(openmetrics_format: bool = False) -> MetricsResponse:
+def get_latest_metrics(*, openmetrics_format: bool) -> MetricsResponse:
     registry = REGISTRY
 
     if "PROMETHEUS_MULTIPROC_DIR" in os.environ:

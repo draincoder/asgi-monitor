@@ -19,7 +19,7 @@ async def index() -> dict:
 async def test_metrics() -> None:
     # Arrange
     app = FastAPI()
-    setup_metrics(app=app, app_name="test")
+    setup_metrics(app=app, app_name="test", include_trace_exemplar=False, include_metrics_endpoint=True)
 
     # Act
     async with fastapi_app(app) as client:

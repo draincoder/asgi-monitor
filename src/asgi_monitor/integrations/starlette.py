@@ -96,6 +96,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         app: ASGIApp,
         app_name: str,
         metrics_prefix: str,
+        *,
         include_trace_exemplar: bool,
     ) -> None:
         super().__init__(app)
@@ -168,8 +169,9 @@ def setup_metrics(
     app: Starlette,
     app_name: str,
     metrics_prefix: str = "starlette",
-    include_trace_exemplar: bool = False,
-    include_metrics_endpoint: bool = True,
+    *,
+    include_trace_exemplar: bool,
+    include_metrics_endpoint: bool,
 ) -> None:
     app.add_middleware(
         MetricsMiddleware,

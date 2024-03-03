@@ -8,12 +8,16 @@ from ._processors import _build_default_processors
 __all__ = ("configure_logging",)
 
 
-def configure_logging(level: str | int = logging.INFO, json_format: bool = False) -> None:
-    _configure_structlog(json_format)
+def configure_logging(
+    level: str | int = logging.INFO,
+    *,
+    json_format: bool,
+) -> None:
+    _configure_structlog(json_format=json_format)
     _configure_default_logging(level=level, json_format=json_format)
 
 
-def _configure_structlog(json_format: bool) -> None:
+def _configure_structlog(*, json_format: bool) -> None:
     structlog.configure_once(
         processors=[
             *_build_default_processors(json_format=json_format),

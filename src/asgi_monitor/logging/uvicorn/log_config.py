@@ -141,8 +141,9 @@ class TraceUvicornAccessJSONFormatter(structlog.stdlib.ProcessorFormatter):
 
 def build_uvicorn_log_config(
     level: str | int = logging.INFO,
-    json_format: bool = False,
-    include_trace: bool = False,
+    *,
+    json_format: bool,
+    include_trace: bool,
 ) -> dict[str, Any]:
     level_name = logging.getLevelName(level)
 

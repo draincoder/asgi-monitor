@@ -92,7 +92,7 @@ async def test_tracing_with_empty_routes() -> None:
 async def test_metrics() -> None:
     # Arrange
     app = Starlette()
-    setup_metrics(app=app, app_name="test")
+    setup_metrics(app=app, app_name="test", include_metrics_endpoint=True, include_trace_exemplar=False)
 
     # Act
     async with starlette_app(app) as client:
@@ -111,7 +111,7 @@ async def test_metrics() -> None:
 async def test_error_metrics() -> None:
     # Arrange
     app = Starlette(routes=[Route("/error", endpoint=error, methods=["GET"])])
-    setup_metrics(app=app, app_name="test")
+    setup_metrics(app=app, app_name="test", include_metrics_endpoint=True, include_trace_exemplar=False)
 
     # Act
     async with starlette_app(app) as client:

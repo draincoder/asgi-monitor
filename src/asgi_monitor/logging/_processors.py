@@ -5,7 +5,7 @@ import structlog
 __all__ = ("_build_default_processors",)
 
 
-def _build_default_processors(json_format: bool) -> list[Any]:
+def _build_default_processors(*, json_format: bool) -> list[Any]:
     pr = [
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,

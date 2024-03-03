@@ -39,8 +39,9 @@ def setup_metrics(
     app: FastAPI,
     app_name: str,
     metrics_prefix: str = "fastapi",
-    include_trace_exemplar: bool = False,
-    include_metrics_endpoint: bool = True,
+    *,
+    include_trace_exemplar: bool,
+    include_metrics_endpoint: bool,
 ) -> None:
     app.add_middleware(
         MetricsMiddleware,
