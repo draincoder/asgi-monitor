@@ -20,7 +20,7 @@ if TYPE_CHECKING:
     from starlette.requests import Request
     from starlette.types import ASGIApp, Receive, Scope, Send
 
-from asgi_monitor.tracing.config import _TracingConfig
+from asgi_monitor.tracing.config import CommonTracingConfig
 from asgi_monitor.tracing.middleware import build_open_telemetry_middleware
 
 __all__ = (
@@ -68,7 +68,7 @@ def _get_path(request: Request) -> tuple[str, bool]:
 
 
 @dataclass
-class TracingConfig(_TracingConfig):
+class TracingConfig(CommonTracingConfig):
     exclude_urls_env_key: str = "STARLETTE"
     scope_span_details_extractor: Callable[[Any], tuple[str, dict[str, Any]]] = _get_default_span_details
 
@@ -96,12 +96,12 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         app: ASGIApp,
         app_name: str,
         metrics_prefix: str,
-        include_trace: bool,
+        include_trace_exemplar: bool,
     ) -> None:
         super().__init__(app)
         container = MetricsContainer(prefix=metrics_prefix)
         self.metrics = MetricsManager(app_name=app_name, container=container)
-        self.include_trace = include_trace
+        self.include_exemplar = include_trace_exemplar
         self.metrics.add_app_info()
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
@@ -133,7 +133,7 @@ class MetricsMiddleware(BaseHTTPMiddleware):
             status_code = response.status_code
             exemplar: dict[str, str] | None = None
 
-            if self.include_trace:
+            if self.include_exemplar:
                 span = trace.get_current_span()
                 trace_id = trace.format_trace_id(span.get_span_context().trace_id)
                 exemplar = {"TraceID": trace_id}
@@ -168,14 +168,14 @@ def setup_metrics(
     app: Starlette,
     app_name: str,
     metrics_prefix: str = "starlette",
-    include_trace: bool = False,
+    include_trace_exemplar: bool = False,
     include_metrics_endpoint: bool = True,
 ) -> None:
     app.add_middleware(
         MetricsMiddleware,
         app_name=app_name,
         metrics_prefix=metrics_prefix,
-        include_trace=include_trace,
+        include_trace_exemplar=include_trace_exemplar,
     )
     if include_metrics_endpoint:
         app.add_route(

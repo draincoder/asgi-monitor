@@ -6,7 +6,11 @@ __all__ = ("GunicornStandaloneApplication",)
 
 
 class GunicornStandaloneApplication(BaseApplication):
-    def __init__(self, app: Any, options: dict[str, Any] | None = None) -> None:
+    def __init__(
+        self,
+        app: Any,
+        options: dict[str, Any] | None = None,
+    ) -> None:
         self.options = options or {}
         self.application = app
         super().__init__()

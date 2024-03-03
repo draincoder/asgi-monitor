@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-__all__ = ("_TracingConfig",)
+__all__ = ("CommonTracingConfig",)
 
 
 from opentelemetry.metrics import Meter, MeterProvider
@@ -13,7 +13,7 @@ OpenTelemetryHookHandler = Callable[[Span, dict], None]
 
 
 @dataclass
-class _TracingConfig:
+class CommonTracingConfig:
     exclude_urls_env_key: str
     scope_span_details_extractor: Callable[[Any], tuple[str, dict[str, Any]]]
     server_request_hook_handler: OpenTelemetryHookHandler | None = field(default=None)

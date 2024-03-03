@@ -38,7 +38,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(debug=True)
     app.include_router(router)
-    setup_metrics(app, app_name="fastapi", include_trace=True, include_metrics_endpoint=True)
+    setup_metrics(app, app_name="fastapi", include_trace_exemplar=True, include_metrics_endpoint=True)
     setup_tracing(app=app, config=config)
 
     return app

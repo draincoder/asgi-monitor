@@ -3,7 +3,7 @@ from _pytest.capture import CaptureFixture
 from assertpy import assert_that
 
 from asgi_monitor.logging import configure_logging
-from tests.unit.logging.utils import read_console_logs
+from tests.utils import read_console_logs
 
 
 def test_simple_log(capfd: CaptureFixture) -> None:
@@ -16,7 +16,6 @@ def test_simple_log(capfd: CaptureFixture) -> None:
 
     # Assert
     simple_log = read_console_logs(capfd)[0]
-
     assert_that(simple_log).contains(
         "info",
         "simple message",
@@ -51,7 +50,6 @@ def test_kwargs_log(capfd: CaptureFixture) -> None:
 
     # Assert
     kwargs_log = read_console_logs(capfd)[0]
-
     assert_that(kwargs_log).contains(
         "info",
         "kwargs message",

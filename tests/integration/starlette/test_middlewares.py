@@ -1,41 +1,18 @@
 import asyncio
-from contextlib import asynccontextmanager
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
-from asgi_lifespan import LifespanManager
 from assertpy import assert_that
-from opentelemetry import trace
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import Span, TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 from starlette.routing import Route
-from starlette.testclient import TestClient
 
-from asgi_monitor.integrations.starlette import TracingConfig, setup_metrics, setup_tracing
+if TYPE_CHECKING:
+    from opentelemetry.sdk.trace import Span
+
+from asgi_monitor.integrations.starlette import setup_metrics, setup_tracing
 from asgi_monitor.metrics import get_latest_metrics
-
-
-@asynccontextmanager
-async def starlette_app(app: Starlette) -> TestClient:
-    async with LifespanManager(app):
-        yield TestClient(app)
-
-
-def build_tracing_config() -> tuple[TracingConfig, InMemorySpanExporter]:
-    resource = Resource.create(
-        attributes={
-            "service.name": "starlette",
-        },
-    )
-    tracer = TracerProvider(resource=resource)
-    trace.set_tracer_provider(tracer)
-    exporter = InMemorySpanExporter()
-    tracer.add_span_processor(SimpleSpanProcessor(exporter))
-    return TracingConfig(tracer_provider=tracer), exporter
+from tests.integration.utils import build_starlette_tracing_config, starlette_app
 
 
 async def index(request: Request) -> JSONResponse:
@@ -48,11 +25,11 @@ async def error(request: Request) -> JSONResponse:
     return JSONResponse({"result": result})
 
 
-async def test_trace_middleware() -> None:
+async def test_tracing() -> None:
     # Arrange
-    config, exporter = build_tracing_config()
+    trace_config, exporter = build_starlette_tracing_config()
     app = Starlette(routes=[Route("/", endpoint=index, methods=["GET"])])
-    setup_tracing(app=app, config=config)
+    setup_tracing(app=app, config=trace_config)
 
     # Act
     async with starlette_app(app) as client:
@@ -81,11 +58,11 @@ async def test_trace_middleware() -> None:
         )
 
 
-async def test_empty_routes_trace_middleware() -> None:
+async def test_tracing_with_empty_routes() -> None:
     # Arrange
-    config, exporter = build_tracing_config()
+    trace_config, exporter = build_starlette_tracing_config()
     app = Starlette()
-    setup_tracing(app=app, config=config)
+    setup_tracing(app=app, config=trace_config)
 
     # Act
     async with starlette_app(app) as client:
@@ -112,7 +89,7 @@ async def test_empty_routes_trace_middleware() -> None:
         )
 
 
-async def test_metrics_middleware() -> None:
+async def test_metrics() -> None:
     # Arrange
     app = Starlette()
     setup_metrics(app=app, app_name="test")
@@ -131,7 +108,7 @@ async def test_metrics_middleware() -> None:
         )
 
 
-async def test_error_metrics_middleware() -> None:
+async def test_error_metrics() -> None:
     # Arrange
     app = Starlette(routes=[Route("/error", endpoint=error, methods=["GET"])])
     setup_metrics(app=app, app_name="test")
@@ -157,16 +134,13 @@ async def test_error_metrics_middleware() -> None:
             )
 
 
-async def test_full_middleware() -> None:
+async def test_metrics_with_tracing() -> None:
     # Arrange
-    config, _ = build_tracing_config()
+    trace_config, _ = build_starlette_tracing_config()
     app = Starlette(routes=[Route("/", endpoint=index, methods=["GET"])])
-    setup_metrics(app=app, app_name="test", include_metrics_endpoint=False, include_trace=True)
-    setup_tracing(app=app, config=config)
-    pattern = (
-        r"starlette_request_duration_seconds_bucket\{"
-        r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
-    )
+
+    setup_metrics(app=app, app_name="test", include_metrics_endpoint=False, include_trace_exemplar=True)
+    setup_tracing(app=app, config=trace_config)
 
     # Act
     async with starlette_app(app) as client:
@@ -175,4 +149,8 @@ async def test_full_middleware() -> None:
         # Assert
         assert response.status_code == 200
         metrics = get_latest_metrics(openmetrics_format=True)
+        pattern = (
+            r"starlette_request_duration_seconds_bucket\{"
+            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+        )
         assert_that(metrics.payload.decode()).matches(pattern)

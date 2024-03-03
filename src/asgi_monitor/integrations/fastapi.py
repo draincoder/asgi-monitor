@@ -22,11 +22,11 @@ __all__ = (
 )
 
 
-from asgi_monitor.tracing import _TracingConfig
+from asgi_monitor.tracing import CommonTracingConfig
 
 
 @dataclass
-class TracingConfig(_TracingConfig):
+class TracingConfig(CommonTracingConfig):
     exclude_urls_env_key: str = "FASTAPI"
     scope_span_details_extractor: Callable[[Any], tuple[str, dict[str, Any]]] = _get_default_span_details
 
@@ -39,14 +39,14 @@ def setup_metrics(
     app: FastAPI,
     app_name: str,
     metrics_prefix: str = "fastapi",
-    include_trace: bool = False,
+    include_trace_exemplar: bool = False,
     include_metrics_endpoint: bool = True,
 ) -> None:
     app.add_middleware(
         MetricsMiddleware,
         app_name=app_name,
         metrics_prefix=metrics_prefix,
-        include_trace=include_trace,
+        include_trace_exemplar=include_trace_exemplar,
     )
     if include_metrics_endpoint:
         app.add_route(

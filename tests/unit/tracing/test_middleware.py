@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerProvider
 
-from asgi_monitor.tracing import _TracingConfig
+from asgi_monitor.tracing import CommonTracingConfig
 from asgi_monitor.tracing.middleware import build_open_telemetry_middleware
 
 
@@ -17,7 +17,7 @@ def test_build_middleware() -> None:
         return "test", {"test": "test"}
 
     # Act
-    config = _TracingConfig(
+    config = CommonTracingConfig(
         exclude_urls_env_key="FASTAPI",
         scope_span_details_extractor=default_extractor,
         tracer_provider=tracer,
