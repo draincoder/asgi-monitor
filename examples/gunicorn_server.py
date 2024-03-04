@@ -16,7 +16,7 @@ def run() -> None:
     }
     configure_logging(level=level, json_format=True)
 
-    from examples.asgi_app import get_app
+    from asgi_app import get_app
 
     app = get_app()
 

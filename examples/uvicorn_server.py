@@ -12,7 +12,7 @@ def run() -> None:
     log_config = build_uvicorn_log_config(level=level, json_format=json_format, include_trace=False)
     configure_logging(level=level, json_format=json_format)
 
-    from examples.asgi_app import get_app
+    from asgi_app import get_app
 
     app = get_app()
 

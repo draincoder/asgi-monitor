@@ -1,0 +1,23 @@
+[sources.docker]
+type = "docker_logs"
+docker_host = "/var/run/docker.sock"
+include_containers = ["asgi-monitor.api"]
+
+[transforms.json]
+type = "remap"
+inputs = ["docker"]
+drop_on_error = true
+source = ".message = object!(parse_json(.message) ?? {})"
+
+[sinks.console]
+type = "console"
+inputs = ["json"]
+encoding.codec = "json"
+
+[sinks.loki_sync_id]
+type = "loki"
+inputs = ["json"]
+encoding.codec = "json"
+labels.event = "log"
+labels.container_name = "{{container_name}}"
+endpoint = "http://asgi-monitor.loki:3100"

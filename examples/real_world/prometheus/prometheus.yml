@@ -1,0 +1,16 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]
+
+  - job_name: "api"
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["asgi-monitor.api:8080"]
+#    basic_auth: # Basic auth for Nginx api /metrics path
+#      username: "prometheus"
+#      password: "pass"

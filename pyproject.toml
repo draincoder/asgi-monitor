@@ -8,6 +8,16 @@ license = {text = "MIT"}
 authors = [
     {name = "treaditup", email = "treaditup@gmail.com"},
 ]
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 dependencies = [
     "structlog>=24.1.0",
     "prometheus-client>=0.20.0",
@@ -18,7 +28,9 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "https://github.com/draincoder/asgi-monitor"
+"Source" = "https://github.com/draincoder/asgi-monitor"
+"Homepage" = "https://github.com/draincoder/asgi-monitor"
+"Bug Tracker" = "https://github.com/draincoder/asgi-monitor/issues"
 
 [build-system]
 requires = ["setuptools>=61", "wheel"]
@@ -58,6 +70,7 @@ line-length = 120
 target-version="py310"
 src = ["src"]
 include = ["src/**.py", "tests/**.py"]
+exclude = ["examples/real_world/app/main.py"]
 
 lint.select = [
     "ALL",
@@ -82,7 +95,7 @@ lint.ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["TID252", "PLR2004", "S101", "T201", "SLF001"]
-"examples/**" = ["T201", "B018"]
+"examples/**" = ["T201", "B018", "INP001"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 12

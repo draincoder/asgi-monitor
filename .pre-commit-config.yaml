@@ -23,8 +23,8 @@ repos:
       - id: ensure-dunder-all
         exclude: "tests*|examples*"
         args: ["--use-tuple"]
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.2.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.3.0
     hooks:
       - id: ruff
         args: ["--fix"]
