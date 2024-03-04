@@ -26,7 +26,7 @@ async def index(request: Request) -> PlainTextResponse:
 
 
 def create_app() -> Starlette:
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
 
     resource = Resource.create(
         attributes={

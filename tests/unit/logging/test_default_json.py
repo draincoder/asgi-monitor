@@ -11,7 +11,7 @@ from tests.utils import capture_full_logs, read_json_logs
 
 def test_simple_log(capfd: CaptureFixture) -> None:
     # Arrange
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
     logger = structlog.get_logger("testlogger")
 
     # Act
@@ -19,7 +19,6 @@ def test_simple_log(capfd: CaptureFixture) -> None:
 
     # Assert
     [simple_log] = read_json_logs(capfd)
-
     assert_that(simple_log).is_equal_to(
         {
             "event": "simple message",
@@ -41,9 +40,46 @@ def test_simple_log(capfd: CaptureFixture) -> None:
     )
 
 
+def test_simple_log_with_empty_trace(capfd: CaptureFixture) -> None:
+    # Arrange
+    configure_logging(level=logging.INFO, json_format=True, include_trace=True)
+    logger = structlog.get_logger("testlogger")
+
+    # Act
+    logger.info("empty trace")
+
+    # Assert
+    [simple_log] = read_json_logs(capfd)
+    assert_that(simple_log).is_equal_to(
+        {
+            "event": "empty trace",
+            "filename": "test_default_json.py",
+            "func_name": "test_simple_log_with_empty_trace",
+            "level": "info",
+            "logger": "testlogger",
+            "module": "test_default_json",
+            "thread_name": "MainThread",
+        },
+        ignore=["timestamp", "thread", "process", "pathname", "process_name"],
+    )
+    assert_that(simple_log).contains_key(
+        "timestamp",
+        "thread",
+        "process",
+        "pathname",
+        "process_name",
+    )
+    assert_that(simple_log).does_not_contain_key(
+        "trace_id",
+        "span_id",
+        "service.name",
+        "parent_span_id",
+    )
+
+
 def test_kwargs_log(capfd: CaptureFixture) -> None:
     # Arrange
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
     logger = structlog.get_logger("testlogger")
 
     # Act
@@ -82,7 +118,7 @@ def test_kwargs_log(capfd: CaptureFixture) -> None:
 
 def test_timestamp_format(capfd: CaptureFixture) -> None:
     # Arrange
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
     logger = structlog.get_logger()
 
     # Act
@@ -100,7 +136,7 @@ def test_timestamp_format(capfd: CaptureFixture) -> None:
 
 def test_filter_logs_by_level(capfd: CaptureFixture) -> None:
     # Arrange
-    configure_logging(level=logging.WARNING, json_format=True)
+    configure_logging(level=logging.WARNING, json_format=True, include_trace=False)
     logger = structlog.get_logger("testlogger")
 
     # Act

@@ -22,7 +22,7 @@ GRPC_ENDPOINT = "http://asgi-monitor.tempo:4317"
 
 
 def create_app() -> FastAPI:
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=True)
 
     resource = Resource.create(
         attributes={

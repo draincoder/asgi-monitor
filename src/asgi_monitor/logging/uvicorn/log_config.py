@@ -3,9 +3,9 @@ import logging
 from typing import Any
 
 import structlog
-from opentelemetry import trace
 
-from asgi_monitor.logging._processors import _build_default_processors
+from asgi_monitor.logging._default_processors import _build_default_processors
+from asgi_monitor.logging._trace_processor import _extract_open_telemetry_trace_meta
 
 __all__ = ("build_uvicorn_log_config",)
 
@@ -31,32 +31,6 @@ def _extract_uvicorn_request_meta(
         event_dict["status_code"] = status_code
 
         del event_dict["positional_args"]
-
-    return event_dict
-
-
-def _extract_open_telemetry_trace_meta(
-    wrapped_logger: logging.Logger | None,
-    method_name: str,
-    event_dict: dict[str, Any],
-) -> dict[str, Any]:
-    with contextlib.suppress(KeyError, ValueError):
-        span = trace.get_current_span()
-        if not span.is_recording():
-            event_dict["span_id"] = None
-            event_dict["trace_id"] = None
-            event_dict["parent_span_id"] = None
-            event_dict["service.name"] = None
-            return event_dict
-
-        ctx = span.get_span_context()
-        service_name = trace.get_tracer_provider().resource.attributes["service.name"]
-        parent = getattr(span, "parent", None)
-
-        event_dict["span_id"] = trace.format_span_id(ctx.span_id)
-        event_dict["trace_id"] = trace.format_trace_id(ctx.trace_id)
-        event_dict["parent_span_id"] = None if not parent else trace.format_span_id(parent.span_id)
-        event_dict["service.name"] = service_name
 
     return event_dict
 

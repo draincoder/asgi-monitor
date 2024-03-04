@@ -25,7 +25,7 @@ async def index() -> str:
 
 
 def create_app() -> FastAPI:
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
 
     resource = Resource.create(
         attributes={

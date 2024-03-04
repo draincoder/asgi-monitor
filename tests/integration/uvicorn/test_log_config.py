@@ -2,8 +2,10 @@ import logging
 
 from _pytest.capture import CaptureFixture
 from assertpy import assert_that
-from fastapi import FastAPI
+from fastapi import APIRouter, FastAPI
 from httpx import AsyncClient
+from opentelemetry import trace
+from structlog import get_logger
 from uvicorn import Config
 
 from asgi_monitor.integrations.fastapi import setup_tracing
@@ -12,10 +14,24 @@ from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
 from tests.integration.utils import build_fastapi_tracing_config, run_server
 from tests.utils import read_console_logs, read_json_logs
 
+logger = logging.getLogger(__name__)
+struct_logger = get_logger(structlog_name="structlog")
+router = APIRouter(prefix="")
+
+
+@router.get("/log")
+async def log_in_controller() -> dict:
+    struct_logger.info("trace info")
+
+    with trace.get_tracer("fastapi").start_as_current_span("test"):
+        logger.info("trace error")
+
+    return {"status": "ok"}
+
 
 async def test_uvicorn_logs_format_json(capfd: CaptureFixture) -> None:
     # Arrange
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
 
     log_config = build_uvicorn_log_config(level=logging.INFO, json_format=True, include_trace=False)
     app = FastAPI()
@@ -59,7 +75,7 @@ async def test_uvicorn_logs_format_json(capfd: CaptureFixture) -> None:
 
 async def test_uvicorn_logs_format_console(capfd: CaptureFixture) -> None:
     # Arrange
-    configure_logging(level=logging.INFO, json_format=False)
+    configure_logging(level=logging.INFO, json_format=False, include_trace=False)
 
     log_config = build_uvicorn_log_config(level=logging.INFO, json_format=False, include_trace=False)
     app = FastAPI()
@@ -105,7 +121,7 @@ async def test_uvicorn_logs_with_trace_format_console(capfd: CaptureFixture) -> 
     app = FastAPI()
 
     setup_tracing(app, trace_config)
-    configure_logging(level=logging.INFO, json_format=False)
+    configure_logging(level=logging.INFO, json_format=False, include_trace=False)
 
     log_config = build_uvicorn_log_config(level=logging.INFO, json_format=False, include_trace=True)
     config = Config(app=app, log_config=log_config)
@@ -137,13 +153,48 @@ async def test_uvicorn_logs_with_trace_format_console(capfd: CaptureFixture) -> 
     )
 
 
+async def test_uvicorn_logs_with_trace_in_controller_format_console(capfd: CaptureFixture) -> None:
+    # Arrange
+    trace_config, _ = build_fastapi_tracing_config()
+    app = FastAPI()
+    app.include_router(router)
+
+    setup_tracing(app, trace_config)
+    configure_logging(level=logging.INFO, json_format=False, include_trace=True)
+
+    log_config = build_uvicorn_log_config(level=logging.INFO, json_format=False, include_trace=True)
+    config = Config(app=app, log_config=log_config)
+
+    # Act
+    async with run_server(config), AsyncClient() as client:
+        await client.get("http://127.0.0.1:8000/log")
+
+    # Assert
+    logs = read_console_logs(capfd)
+    info_log, error_log = logs[4:6]
+    assert_that(info_log).contains(
+        "structlog_name",
+        "service.name",
+        "trace_id",
+        "span_id",
+    )
+    assert_that(info_log).does_not_contain("parent_span_id")
+    assert_that(error_log).contains(
+        "parent_span_id",
+        "service.name",
+        "trace_id",
+        "span_id",
+    )
+    assert_that(error_log).does_not_contain("structlog_name")
+
+
 async def test_uvicorn_logs_with_trace_format_json(capfd: CaptureFixture) -> None:
     # Arrange
     trace_config, _ = build_fastapi_tracing_config()
     app = FastAPI()
 
     setup_tracing(app, trace_config)
-    configure_logging(level=logging.INFO, json_format=True)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
 
     log_config = build_uvicorn_log_config(level=logging.INFO, json_format=True, include_trace=True)
     config = Config(app=app, log_config=log_config)
@@ -170,3 +221,38 @@ async def test_uvicorn_logs_with_trace_format_json(capfd: CaptureFixture) -> Non
         "trace_id",
         "span_id",
     )
+
+
+async def test_uvicorn_logs_with_trace_in_controller_format_json(capfd: CaptureFixture) -> None:
+    # Arrange
+    trace_config, _ = build_fastapi_tracing_config()
+    app = FastAPI()
+    app.include_router(router)
+
+    setup_tracing(app, trace_config)
+    configure_logging(level=logging.INFO, json_format=True, include_trace=True)
+
+    log_config = build_uvicorn_log_config(level=logging.INFO, json_format=True, include_trace=True)
+    config = Config(app=app, log_config=log_config)
+
+    # Act
+    async with run_server(config), AsyncClient() as client:
+        await client.get("http://127.0.0.1:8000/log")
+
+    # Assert
+    logs = read_json_logs(capfd)
+    info_log, error_log = logs[4:6]
+    assert_that(info_log).contains_key(
+        "structlog_name",
+        "span_id",
+        "trace_id",
+        "service.name",
+    )
+    assert_that(info_log).does_not_contain_key("parent_span_id")
+    assert_that(error_log).contains_key(
+        "span_id",
+        "trace_id",
+        "service.name",
+        "parent_span_id",
+    )
+    assert_that(error_log).does_not_contain_key("structlog_name")

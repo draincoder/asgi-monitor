@@ -10,7 +10,7 @@ def run() -> None:
     level = logging.DEBUG
     json_format = False
     log_config = build_uvicorn_log_config(level=level, json_format=json_format, include_trace=False)
-    configure_logging(level=level, json_format=json_format)
+    configure_logging(level=level, json_format=json_format, include_trace=False)
 
     from asgi_app import get_app
 

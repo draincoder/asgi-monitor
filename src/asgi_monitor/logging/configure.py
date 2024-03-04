@@ -3,7 +3,8 @@ import sys
 
 import structlog
 
-from ._processors import _build_default_processors
+from ._default_processors import _build_default_processors
+from ._trace_processor import _extract_open_telemetry_trace_meta
 
 __all__ = ("configure_logging",)
 
@@ -12,31 +13,48 @@ def configure_logging(
     level: str | int = logging.INFO,
     *,
     json_format: bool,
+    include_trace: bool,
 ) -> None:
-    _configure_structlog(json_format=json_format)
-    _configure_default_logging(level=level, json_format=json_format)
+    _configure_structlog(json_format=json_format, include_trace=include_trace)
+    _configure_default_logging(level=level, json_format=json_format, include_trace=include_trace)
 
 
-def _configure_structlog(*, json_format: bool) -> None:
+def _configure_structlog(
+    *,
+    json_format: bool,
+    include_trace: bool,
+) -> None:
+    processors = [
+        *_build_default_processors(json_format=json_format),
+        structlog.stdlib.ProcessorFormatter.wrap_for_formatter,  # for integration with default logging
+    ]
+
+    if include_trace:
+        processors.insert(-1, _extract_open_telemetry_trace_meta)  # after defaults
+
     structlog.configure_once(
-        processors=[
-            *_build_default_processors(json_format=json_format),
-            structlog.stdlib.ProcessorFormatter.wrap_for_formatter,  # for integration with default logging
-        ],
+        processors=processors,
         logger_factory=structlog.stdlib.LoggerFactory(),
     )
 
 
-def _configure_default_logging(*, level: str | int, json_format: bool) -> None:
+def _configure_default_logging(
+    *,
+    level: str | int,
+    json_format: bool,
+    include_trace: bool,
+) -> None:
     renderer_processor = structlog.processors.JSONRenderer() if json_format else structlog.dev.ConsoleRenderer()
+    processors = [
+        *_build_default_processors(json_format=json_format),
+        structlog.stdlib.ProcessorFormatter.remove_processors_meta,
+        renderer_processor,
+    ]
 
-    formatter = structlog.stdlib.ProcessorFormatter(
-        processors=[
-            *_build_default_processors(json_format=json_format),
-            structlog.stdlib.ProcessorFormatter.remove_processors_meta,
-            renderer_processor,
-        ],
-    )
+    if include_trace:
+        processors.insert(-2, _extract_open_telemetry_trace_meta)  # after defaults
+
+    formatter = structlog.stdlib.ProcessorFormatter(processors=processors)
 
     handler = logging.StreamHandler(stream=sys.stdout)
     handler.setFormatter(formatter)

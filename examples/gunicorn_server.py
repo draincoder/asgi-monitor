@@ -14,7 +14,7 @@ def run() -> None:
         "worker_class": worker_class,
         "logger_class": StubbedGunicornLogger,
     }
-    configure_logging(level=level, json_format=True)
+    configure_logging(level=level, json_format=True, include_trace=False)
 
     from asgi_app import get_app
 
