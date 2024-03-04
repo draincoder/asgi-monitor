@@ -79,4 +79,5 @@ jobs:
         with:
           pytest-xml-coverage-path: ./coverage.xml
           junitxml-path: ./junitxml.xml
+          junitxml-title: ${{ matrix.python-version }}
           unique-id-for-comment: ${{ matrix.python-version }}
