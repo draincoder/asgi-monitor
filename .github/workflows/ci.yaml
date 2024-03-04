@@ -72,10 +72,11 @@ jobs:
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
       - name: Run tests
-        run: pdm run pytest tests --cov=asgi_monitor --junitxml=pytest.xml | tee pytest-coverage.txt; exit ${PIPESTATUS[0]}
+        run: pdm run pytest tests --cov=asgi_monitor --junitxml=junitxml.xml --cov-report "xml:coverage.xml"; exit ${PIPESTATUS[0]}
 
       - name: Test coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          pytest-coverage-path: ./pytest-coverage.txt
-          junitxml-path: ./pytest.xml
+          pytest-xml-coverage-path: ./coverage.xml
+          junitxml-path: ./junitxml.xml
+          create-new-comment: true
