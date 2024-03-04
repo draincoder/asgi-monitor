@@ -21,3 +21,8 @@ async def get_500_error() -> None:
 async def get_404() -> None:
     logger.error("Not Found", extra={"status_code": 404})
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not Found")
+
+
+@error_router.get("/infinity", status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+async def get_infinity() -> float:
+    return 1 / 0
