@@ -119,6 +119,15 @@ def build_uvicorn_log_config(
     json_format: bool,
     include_trace: bool,
 ) -> dict[str, Any]:
+    """
+    Building a Uvicorn log config.
+
+    :param str | int level: Logging level.
+    :param bool json_format: The format of the logs. If True, the log will be rendered as JSON.
+    :param bool include_trace: Include tracing information ("trace_id", "span_id", "parent_span_id", "service.name").
+    :returns: Logging configuration for Uvicorn
+    """
+
     level_name = logging.getLevelName(level)
 
     if json_format:

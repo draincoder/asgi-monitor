@@ -21,12 +21,23 @@ __all__ = (
 
 @dataclass(frozen=True, slots=True)
 class MetricsResponse:
+    """
+    Represents a response containing metrics data.
+    """
+
     status_code: int
     headers: dict[str, str]
     payload: bytes
 
 
 def get_latest_metrics(*, openmetrics_format: bool) -> MetricsResponse:
+    """
+    Generates the latest metrics data in either Prometheus or OpenMetrics format.
+
+    :param bool openmetrics_format: A flag indicating whether to generate metrics in OpenMetrics format.
+    :returns: MetricsResponse
+    """
+
     registry = REGISTRY
 
     if "PROMETHEUS_MULTIPROC_DIR" in os.environ:

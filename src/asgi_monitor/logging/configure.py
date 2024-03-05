@@ -15,6 +15,15 @@ def configure_logging(
     json_format: bool,
     include_trace: bool,
 ) -> None:
+    """
+    Default logging setting for logging and structlog.
+
+    :param str | int level: Logging level.
+    :param bool json_format: The format of the logs. If True, the log will be rendered as JSON.
+    :param bool include_trace: Include tracing information ("trace_id", "span_id", "parent_span_id", "service.name").
+    :returns: None
+    """
+
     _configure_structlog(json_format=json_format, include_trace=include_trace)
     _configure_default_logging(level=level, json_format=json_format, include_trace=include_trace)
 

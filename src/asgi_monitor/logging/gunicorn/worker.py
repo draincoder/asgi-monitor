@@ -6,6 +6,10 @@ __all__ = ("GunicornStandaloneApplication",)
 
 
 class GunicornStandaloneApplication(BaseApplication):
+    """
+    Custom standalone application class for running a Gunicorn server with a ASGI application using Uvicorn worker.
+    """
+
     def __init__(
         self,
         app: Any,

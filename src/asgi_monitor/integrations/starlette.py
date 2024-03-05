@@ -69,8 +69,21 @@ def _get_path(request: Request) -> tuple[str, bool]:
 
 @dataclass
 class TracingConfig(CommonTracingConfig):
+    """Configuration class for the OpenTelemetry middleware.
+    Consult the OpenTelemetry ASGI documentation for more info about the configuration options.
+    https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/asgi/asgi.html
+    """
+
     exclude_urls_env_key: str = "STARLETTE"
+    """Key to use when checking whether a list of excluded urls is passed via ENV.
+    OpenTelemetry supports excluding urls by passing an env in the format '{exclude_urls_env_key}_EXCLUDED_URLS'.
+    """
+
     scope_span_details_extractor: Callable[[Any], tuple[str, dict[str, Any]]] = _get_default_span_details
+    """
+    Callback which should return a string and a tuple, representing the desired default span name and a dictionary
+    with any additional span attributes to set.
+    """
 
 
 class TracingMiddleware:
@@ -162,6 +175,15 @@ async def get_metrics(request: Request) -> Response:
 
 
 def setup_tracing(app: Starlette, config: TracingConfig) -> None:
+    """
+    Set up tracing for a Starlette application.
+    The function adds a TracingMiddleware to the Starlette application based on TracingConfig.
+
+    :param Starlette app: The FastAPI application instance.
+    :param TracingConfig config: The Open Telemetry config.
+    :returns: None
+    """
+
     app.add_middleware(TracingMiddleware, config=config)
 
 
@@ -173,6 +195,19 @@ def setup_metrics(
     include_trace_exemplar: bool,
     include_metrics_endpoint: bool,
 ) -> None:
+    """
+    Set up metrics for a Starlette application.
+    This function adds a MetricsMiddleware to the Starlette application with the specified parameters.
+    If include_metrics_endpoint is True, it also adds a route for "/metrics" that returns Prometheus default metrics.
+
+    :param Starlette app: The Starlette application instance.
+    :param str app_name: The name of the Starlette application.
+    :param str metrics_prefix: The prefix to use for the metrics (default is "starlette").
+    :param bool include_trace_exemplar: Whether to include trace exemplars in the metrics.
+    :param bool include_metrics_endpoint: Whether to include a /metrics endpoint.
+    :returns: None
+    """
+
     app.add_middleware(
         MetricsMiddleware,
         app_name=app_name,

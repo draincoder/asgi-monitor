@@ -28,24 +28,52 @@ class StructlogDefaultUvicornWorker(UvicornWorker):
 
 
 class StructlogTextLogUvicornWorker(StructlogDefaultUvicornWorker):
+    """
+    UvicornWorker with custom logging configuration:
+        - level: DEBUG
+        - json_format: False
+        - include_trace: False
+    """
+
     level: int = logging.DEBUG
     json_format: bool = False
     include_trace: bool = False
 
 
 class StructlogTraceTextLogUvicornWorker(StructlogDefaultUvicornWorker):
+    """
+    UvicornWorker with custom logging configuration:
+        - level: DEBUG
+        - json_format: False
+        - include_trace: False
+    """
+
     level: int = logging.DEBUG
     json_format: bool = False
     include_trace: bool = True
 
 
 class StructlogJSONLogUvicornWorker(StructlogDefaultUvicornWorker):
+    """
+    UvicornWorker with custom logging configuration:
+        - level: DEBUG
+        - json_format: True
+        - include_trace: False
+    """
+
     level: int = logging.DEBUG
     json_format: bool = True
     include_trace: bool = False
 
 
 class StructlogTraceJSONLogUvicornWorker(StructlogDefaultUvicornWorker):
+    """
+    UvicornWorker with custom logging configuration:
+        - level: DEBUG
+        - json_format: True
+        - include_trace: True
+    """
+
     level: int = logging.DEBUG
     json_format: bool = True
     include_trace: bool = True

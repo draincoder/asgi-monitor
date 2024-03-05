@@ -7,6 +7,10 @@ __all__ = ("StubbedGunicornLogger",)
 
 
 class StubbedGunicornLogger(Logger):
+    """
+    Custom Gunicorn logger that allows setting up log levels based on Gunicorn configuration.
+    """
+
     def setup(self, cfg: Config) -> None:
         _name_to_level = {
             "CRITICAL": logging.CRITICAL,
