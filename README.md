@@ -27,6 +27,12 @@ Features:
  - Integrations with [FastAPI](https://fastapi.tiangolo.com) and [Starlette](https://www.starlette.io)
  - Logging support for [Uvicorn](https://www.uvicorn.org) and [Gunicorn](https://gunicorn.org) with custom **UvicornWorker**
 
+> **Info**
+>
+> At this stage, the library is being tested and be careful in using it,
+> your participation in the development will be appreciated!
+
+
 ### Installation
 
 ```shell
@@ -89,7 +95,37 @@ See the `prometheus_client` [documentation](https://prometheus.github.io/client_
 
 You can also add query tracing and your logic using `opentelemetry`.
 
-Create your **TracerProvider** with the necessary settings and add it to the **TracingConfig**.
+```python
+from asgi_monitor.integrations.fastapi import TracingConfig, setup_tracing
+from opentelemetry import trace
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+resource = Resource.create(
+    attributes={
+        "service.name": "asgi-monitor",
+        "compose_service": "asgi-monitor",
+    },
+)
+tracer = TracerProvider(resource=resource)
+trace.set_tracer_provider(tracer)
+tracer.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint="http://asgi-monitor.tempo:4317")))
+config = TracingConfig(tracer_provider=tracer)
+
+setup_tracing(app=app, config=config)
+```
+
+Create your **TracerProvider** with the necessary settings and add it to the **TracingConfig**,
+also include tracing in others setup functions.
+
+After that, you can profile the payload of the application.
+
+```python
+with trace.get_tracer("asgi-monitor").start_as_current_span("sleep 0.1"):
+    await asyncio.sleep(0.1)
+```
 
 See [example](https://github.com/draincoder/asgi-monitor/blob/develop/examples/real_world/app/main.py)
 to understand the tracing setup.\
@@ -106,3 +142,5 @@ carefully study them and customize them to your needs.
 >
 > Do not use these configs in production, as authorization and long-term data storage are not configured there!
 >
+
+The library originates from [structlog-asgi](https://github.com/nkhitrov/structlog-asgi), tnx @nkhitrov
