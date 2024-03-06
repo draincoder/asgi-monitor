@@ -144,4 +144,4 @@ carefully study them and customize them to your needs.
 >
 
 The library originates from [structlog-asgi](https://github.com/nkhitrov/structlog-asgi),
-tnx https://github.com/nkhitrov
+tnx [@nkhitrov](https://github.com/nkhitrov)
