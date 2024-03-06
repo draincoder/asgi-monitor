@@ -13,5 +13,96 @@
 
 </div>
 
+## asgi-monitor
+### A library for easy and fast configuration of logging, tracing and metrics for ASGI applications.
 
-### A library for easy and fast configuration of logging, tracing and monitoring of ASGI applications.
+### Purpose
+
+Quickly add minimal features for flexible application monitoring.
+
+Features:
+ - [Prometheus](https://prometheus.io) metrics
+ - [OpenTelemetry](https://opentelemetry.io) traces
+ - [Structlog](https://www.structlog.org/) logging with native **logging** module support
+ - Integrations with [FastAPI](https://fastapi.tiangolo.com) and [Starlette](https://www.starlette.io)
+ - Logging support for [Uvicorn](https://www.uvicorn.org) and [Gunicorn](https://gunicorn.org) with custom **UvicornWorker**
+
+### Installation
+
+```shell
+pip install asgi-monitor
+```
+
+### Quickstart
+
+#### Logging and metrics
+
+```python
+import logging
+
+from asgi_monitor.integrations.fastapi import setup_metrics
+from asgi_monitor.logging import configure_logging
+from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
+from fastapi import FastAPI
+from uvicorn import run
+
+logger = logging.getLogger(__name__)
+app = FastAPI(debug=True)
+
+
+def run_app() -> None:
+    log_config = build_uvicorn_log_config(level=logging.INFO, json_format=True, include_trace=False)
+
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
+    setup_metrics(app, app_name="fastapi", include_metrics_endpoint=True, include_trace_exemplar=False)
+
+    logger.info("App is ready to start")
+
+    run(app, host="127.0.0.1", port=8000, log_config=log_config)
+
+
+if __name__ == "__main__":
+    run_app()
+```
+
+In this example, all logs will be presented in JSON format and the following metrics will be set for the application:
+1. `fastapi_app_info` - ASGI application information
+2. `fastapi_requests_total` - Total count of requests by method and path
+3. `fastapi_responses_total` - Total count of responses by method, path and status codes
+4. `fastapi_request_duration_seconds` - Histogram of request duration by path, in seconds
+5. `fastapi_requests_in_progress` - Gauge of requests by method and path currently being processed
+6. `fastapi_requests_exceptions_total` - Total count of exceptions raised by path and exception type
+
+And these metrics are available by endpoint `/metrics`,
+but you can import `get_latest_metrics` from `asgi_monitor.metrics` to create a custom endpoint.
+
+> **Warning**
+>
+> If you are using **Gunicorn**, then you need to set the environment variable **"PROMETHEUS_MULTIPROC_DIR"**
+> with the path to the directory where the consistent metrics will be stored.
+>
+> This approach will **block** the _event loop_ when recording metrics!
+
+See the `prometheus_client` [documentation](https://prometheus.github.io/client_python/) for adding your custom metrics.
+
+#### Tracing
+
+You can also add query tracing and your logic using `opentelemetry`.
+
+Create your **TracerProvider** with the necessary settings and add it to the **TracingConfig**.
+
+See [example](https://github.com/draincoder/asgi-monitor/blob/develop/examples/real_world/app/main.py)
+to understand the tracing setup.\
+This example also contains all the infrastructure configs to evaluate the capabilities of the application,
+carefully study them and customize them to your needs.
+
+### API Metrics dashboard
+![Dashboard](docs/images/dashboard.png)
+
+### Tempo traces from dashboard logs
+![Traces](docs/images/traces.png)
+
+> **Warning**
+>
+> Do not use these configs in production, as authorization and long-term data storage are not configured there!
+>

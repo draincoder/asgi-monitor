@@ -36,7 +36,7 @@ def create_app() -> FastAPI:
     config = TracingConfig(tracer_provider=tracer)
 
     app = FastAPI(debug=True)
-    setup_metrics(app, app_name=APP_NAME, include_trace_exemplar=True, include_metrics_endpoint=True)
+    setup_metrics(app=app, app_name=APP_NAME, include_trace_exemplar=True, include_metrics_endpoint=True)
     setup_tracing(app=app, config=config)
     setup_routes(app=app)
 
