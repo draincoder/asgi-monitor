@@ -1,6 +1,6 @@
 [project]
 name = "asgi-monitor"
-version = "0.0.2"
+version = "0.1.0"
 description = "Quick and easy monitoring setup for ASGI application"
 requires-python = ">=3.10"
 readme = "README.md"
