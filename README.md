@@ -143,4 +143,5 @@ carefully study them and customize them to your needs.
 > Do not use these configs in production, as authorization and long-term data storage are not configured there!
 >
 
-The library originates from [structlog-asgi](https://github.com/nkhitrov/structlog-asgi), tnx @nkhitrov
+The library originates from [structlog-asgi](https://github.com/nkhitrov/structlog-asgi),
+tnx https://github.com/nkhitrov
