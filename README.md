@@ -72,12 +72,12 @@ if __name__ == "__main__":
 ```
 
 In this example, all logs will be presented in JSON format and the following metrics will be set for the application:
-1. `fastapi_app_info` - ASGI application information
-2. `fastapi_requests_total` - Total count of requests by method and path
-3. `fastapi_responses_total` - Total count of responses by method, path and status codes
-4. `fastapi_request_duration_seconds` - Histogram of request duration by path, in seconds
-5. `fastapi_requests_in_progress` - Gauge of requests by method and path currently being processed
-6. `fastapi_requests_exceptions_total` - Total count of exceptions raised by path and exception type
+1. `fastapi_app_info` - ASGI application information (Gauge)
+2. `fastapi_requests_total` - Total count of requests by method and path (Counter)
+3. `fastapi_responses_total` - Total count of responses by method, path and status codes (Counter)
+4. `fastapi_request_duration_seconds` - Histogram of request duration by path, in seconds (Histogram)
+5. `fastapi_requests_in_progress` - Gauge of requests by method and path currently being processed (Gauge)
+6. `fastapi_requests_exceptions_total` - Total count of exceptions raised by path and exception type (Counter)
 
 And these metrics are available by endpoint `/metrics`,
 but you can import `get_latest_metrics` from `asgi_monitor.metrics` to create a custom endpoint.
