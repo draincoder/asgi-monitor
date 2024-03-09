@@ -216,7 +216,7 @@ def setup_metrics(
     )
     if include_metrics_endpoint:
         app.add_route(
-            path="/metrics/",
+            path="/metrics",
             route=get_metrics,
             methods=["GET"],
             name="Get Prometheus metrics",

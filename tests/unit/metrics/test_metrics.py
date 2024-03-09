@@ -51,14 +51,14 @@ def test_request_count(container: MetricsContainer, manager: MetricsManager) -> 
     expected.samples = [
         Sample(
             name="test_requests_total",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics"},
             value=1.0,
             timestamp=None,
             exemplar=None,
         ),
         Sample(
             name="test_requests_created",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics"},
             value=FROZEN_TIMESTAMP,
             timestamp=None,
             exemplar=None,
@@ -66,7 +66,7 @@ def test_request_count(container: MetricsContainer, manager: MetricsManager) -> 
     ]
 
     # Act
-    manager.inc_requests_count(method="GET", path="/metrics/")
+    manager.inc_requests_count(method="GET", path="/metrics")
 
     # Assert
     request_count = container.request_count().collect()
@@ -85,14 +85,14 @@ def test_response_count(container: MetricsContainer, manager: MetricsManager) ->
     expected.samples = [
         Sample(
             name="test_responses_total",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "status_code": "200"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "status_code": "200"},
             value=1.0,
             timestamp=None,
             exemplar=None,
         ),
         Sample(
             name="test_responses_created",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "status_code": "200"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "status_code": "200"},
             value=FROZEN_TIMESTAMP,
             timestamp=None,
             exemplar=None,
@@ -100,7 +100,7 @@ def test_response_count(container: MetricsContainer, manager: MetricsManager) ->
     ]
 
     # Act
-    manager.inc_responses_count(method="GET", path="/metrics/", status_code=200)
+    manager.inc_responses_count(method="GET", path="/metrics", status_code=200)
 
     # Assert
     response_count = container.response_count().collect()
@@ -118,35 +118,35 @@ def test_request_duration(container: MetricsContainer, manager: MetricsManager) 
     )
     expected_sample_bucket_with_exemplar = Sample(
         name="test_request_duration_seconds_bucket",
-        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "le": IsStr},
+        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "le": IsStr},
         value=1.0,
         timestamp=None,
         exemplar=Exemplar(labels={"TraceID": "1234567"}, value=0.0, timestamp=FROZEN_TIMESTAMP),
     )
     expected_sample_bucket_without_exemplar = Sample(
         name="test_request_duration_seconds_bucket",
-        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "le": IsStr},
+        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "le": IsStr},
         value=1.0,
         timestamp=None,
         exemplar=None,
     )
     expected_sample_count = Sample(
         name="test_request_duration_seconds_count",
-        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
+        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics"},
         value=1.0,
         timestamp=None,
         exemplar=None,
     )
     expected_sample_sum = Sample(
         name="test_request_duration_seconds_sum",
-        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
+        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics"},
         value=0.0,
         timestamp=None,
         exemplar=None,
     )
     expected_sample_created = Sample(
         name="test_request_duration_seconds_created",
-        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
+        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics"},
         value=FROZEN_TIMESTAMP,
         timestamp=None,
         exemplar=None,
@@ -158,7 +158,7 @@ def test_request_duration(container: MetricsContainer, manager: MetricsManager) 
     # Act
     manager.observe_request_duration(
         method="GET",
-        path="/metrics/",
+        path="/metrics",
         duration=after_time - before_time,
         exemplar={"TraceID": "1234567"},
     )
@@ -189,7 +189,7 @@ def test_requests_in_progress_inc(container: MetricsContainer, manager: MetricsM
     expected.samples = [
         Sample(
             name="test_requests_in_progress",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics"},
             value=1.0,
             timestamp=None,
             exemplar=None,
@@ -197,7 +197,7 @@ def test_requests_in_progress_inc(container: MetricsContainer, manager: MetricsM
     ]
 
     # Act
-    manager.add_request_in_progress(method="GET", path="/metrics/")
+    manager.add_request_in_progress(method="GET", path="/metrics")
 
     # Assert
     requests_in_progress = container.requests_in_progress().collect()
@@ -215,7 +215,7 @@ def test_requests_in_progress_dec(container: MetricsContainer, manager: MetricsM
     expected.samples = [
         Sample(
             name="test_requests_in_progress",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics"},
             value=0.0,
             timestamp=None,
             exemplar=None,
@@ -223,8 +223,8 @@ def test_requests_in_progress_dec(container: MetricsContainer, manager: MetricsM
     ]
 
     # Act
-    manager.add_request_in_progress(method="GET", path="/metrics/")
-    manager.remove_request_in_progress(method="GET", path="/metrics/")
+    manager.add_request_in_progress(method="GET", path="/metrics")
+    manager.remove_request_in_progress(method="GET", path="/metrics")
 
     # Assert
     requests_in_progress = container.requests_in_progress().collect()
@@ -243,14 +243,14 @@ def test_requests_exceptions_count(container: MetricsContainer, manager: Metrics
     expected.samples = [
         Sample(
             name="test_requests_exceptions_total",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "exception_type": "RuntimeError"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "exception_type": "RuntimeError"},
             value=1.0,
             timestamp=None,
             exemplar=None,
         ),
         Sample(
             name="test_requests_exceptions_created",
-            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics/", "exception_type": "RuntimeError"},
+            labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "exception_type": "RuntimeError"},
             value=FROZEN_TIMESTAMP,
             timestamp=None,
             exemplar=None,
@@ -260,7 +260,7 @@ def test_requests_exceptions_count(container: MetricsContainer, manager: Metrics
     # Act
     manager.inc_requests_exceptions_count(
         method="GET",
-        path="/metrics/",
+        path="/metrics",
         exception_type=type(RuntimeError()).__name__,
     )
 

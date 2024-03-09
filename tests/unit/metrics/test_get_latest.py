@@ -20,7 +20,7 @@ def test_get_latest_openmetrics_false(manager: MetricsManager) -> None:
         payload=IsBytes,
     )
     manager.add_app_info()
-    manager.add_request_in_progress(method="GET", path="/metrics/")
+    manager.add_request_in_progress(method="GET", path="/metrics")
 
     # Act
     response = get_latest_metrics(openmetrics_format=False)
@@ -28,7 +28,7 @@ def test_get_latest_openmetrics_false(manager: MetricsManager) -> None:
     # Assert
     assert_that(response).is_equal_to(expected)
     assert_that(response.payload.decode()).contains(
-        'test_requests_in_progress{app_name="asgi-monitor",method="GET",path="/metrics/"} 1.0',
+        'test_requests_in_progress{app_name="asgi-monitor",method="GET",path="/metrics"} 1.0',
         'test_app_info{app_name="asgi-monitor"} 1.0',
     )
 
@@ -41,7 +41,7 @@ def test_get_latest_openmetrics_true(manager: MetricsManager) -> None:
         payload=IsBytes,
     )
     manager.add_app_info()
-    manager.add_request_in_progress(method="GET", path="/metrics/")
+    manager.add_request_in_progress(method="GET", path="/metrics")
 
     # Act
     response = get_latest_metrics(openmetrics_format=True)
@@ -49,7 +49,7 @@ def test_get_latest_openmetrics_true(manager: MetricsManager) -> None:
     # Assert
     assert_that(response).is_equal_to(expected)
     assert_that(response.payload.decode()).contains(
-        'test_requests_in_progress{app_name="asgi-monitor",method="GET",path="/metrics/"} 1.0',
+        'test_requests_in_progress{app_name="asgi-monitor",method="GET",path="/metrics"} 1.0',
         'test_app_info{app_name="asgi-monitor"} 1.0',
     )
 
@@ -58,9 +58,9 @@ def add_metrics() -> None:
     manager = MetricsManager(app_name="asgi-monitor", container=MetricsContainer("test"))
 
     for _ in range(10):
-        manager.inc_requests_count(method="GET", path="/metrics/")
-        manager.inc_requests_count(method="GET", path="/token/")
-        manager.inc_requests_count(method="GET", path="/login/")
+        manager.inc_requests_count(method="GET", path="/metrics")
+        manager.inc_requests_count(method="GET", path="/token")
+        manager.inc_requests_count(method="GET", path="/login")
 
 
 def test_get_latest_metrics_multiprocess(tmpdir: Path) -> None:
@@ -87,7 +87,7 @@ def test_get_latest_metrics_multiprocess(tmpdir: Path) -> None:
     # Assert
     assert_that(response).is_equal_to(expected)
     assert_that(response.payload.decode()).contains(
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/metrics/"} 100.0',
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/token/"} 100.0',
-        'test_requests_total{app_name="asgi-monitor",method="GET",path="/login/"} 100.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/metrics"} 100.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/token"} 100.0',
+        'test_requests_total{app_name="asgi-monitor",method="GET",path="/login"} 100.0',
     )

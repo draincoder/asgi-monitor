@@ -134,9 +134,9 @@ async def test_metrics() -> None:
         assert response.status_code == 200
         assert_that(response.content.decode()).contains(
             'starlette_app_info{app_name="test"} 1.0',
-            'starlette_requests_total{app_name="test",method="GET",path="/metrics/"} 1.0',
-            'starlette_requests_created{app_name="test",method="GET",path="/metrics/"}',
-            'starlette_requests_in_progress{app_name="test",method="GET",path="/metrics/"} 1.0',
+            'starlette_requests_total{app_name="test",method="GET",path="/metrics"} 1.0',
+            'starlette_requests_created{app_name="test",method="GET",path="/metrics"}',
+            'starlette_requests_in_progress{app_name="test",method="GET",path="/metrics"} 1.0',
         )
 
 
