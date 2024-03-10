@@ -102,8 +102,6 @@ asgi-monitor uvicorn-log-config --path log-config.json --level info --json-forma
 uvicorn main:app --log-config log-config.json
 ```
 
-
-
 #### Tracing
 
 You can also add query tracing and your logic using `opentelemetry`.
