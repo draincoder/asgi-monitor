@@ -91,6 +91,19 @@ but you can import `get_latest_metrics` from `asgi_monitor.metrics` to create a 
 
 See the `prometheus_client` [documentation](https://prometheus.github.io/client_python/) for adding your custom metrics.
 
+#### CLI
+
+You can also use the `command line interface` to generate the _uvicorn log config_ in a **json** file
+to run `uvicorn` via the `cli`.
+
+```shell
+asgi-monitor uvicorn-log-config --path log-config.json --level info --json-format --include-trace
+
+uvicorn main:app --log-config log-config.json
+```
+
+
+
 #### Tracing
 
 You can also add query tracing and your logic using `opentelemetry`.

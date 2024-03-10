@@ -142,10 +142,10 @@ def build_uvicorn_log_config(
         "disable_existing_loggers": False,
         "formatters": {
             "default": {
-                "()": default,
+                "()": f"{default.__module__}.{default.__name__}",
             },
             "access": {
-                "()": access,
+                "()": f"{access.__module__}.{access.__name__}",
             },
         },
         "handlers": {
