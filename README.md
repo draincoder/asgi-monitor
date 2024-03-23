@@ -125,16 +125,21 @@ trace.set_tracer_provider(tracer)
 tracer.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint="http://asgi-monitor.tempo:4317")))
 config = TracingConfig(tracer_provider=tracer)
 
-setup_tracing(app=app, config=config)
+setup_tracing(app=app, config=config)  # Must be configured last
 ```
 
-Create your **TracerProvider** with the necessary settings and add it to the **TracingConfig**,
-also include tracing in others setup functions.
+1. Install the necessary exporter, for example [opentelemetry-exporter-jaeger](https://pypi.org/project/opentelemetry-exporter-jaeger/) or the standard [opentelemetry-exporter-otlp](https://pypi.org/project/opentelemetry-exporter-otlp/)
+2. Create your `TracerProvider` with the necessary settings and add it to the `TracingConfig`,
+also include tracing in others setup functions
+3. Install `service.name` in the resource attributes
+4. Use `setup_tracing` _after installing all middleware_ to complete the setup
 
 After that, you can profile the payload of the application.
 
 ```python
-with trace.get_tracer("asgi-monitor").start_as_current_span("sleep 0.1"):
+tracer = trace.get_tracer(__name__)
+
+with tracer.start_as_current_span("sleep 0.1"):
     await asyncio.sleep(0.1)
 ```
 

@@ -10,4 +10,4 @@ def _reset_registry() -> None:
             collector._metrics.clear()
             collector._metric_init()
         except AttributeError:
-            pass
+            continue

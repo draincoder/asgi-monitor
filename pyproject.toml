@@ -22,8 +22,6 @@ dependencies = [
     "structlog>=24.1.0",
     "prometheus-client>=0.20.0",
     "opentelemetry-sdk>=1.23.0",
-    "opentelemetry-exporter-otlp>=1.23.0",
-    "opentelemetry-instrumentation-logging>=0.44b0",
     "opentelemetry-instrumentation-asgi>=0.44b0",
     "click>=8.1.7",
 ]
