@@ -5,7 +5,6 @@ from dataclasses import dataclass
 
 from prometheus_client import (
     CONTENT_TYPE_LATEST,
-    REGISTRY,
     CollectorRegistry,
     generate_latest,
     multiprocess,
@@ -30,15 +29,14 @@ class MetricsResponse:
     payload: bytes
 
 
-def get_latest_metrics(*, openmetrics_format: bool) -> MetricsResponse:
+def get_latest_metrics(registry: CollectorRegistry, *, openmetrics_format: bool) -> MetricsResponse:
     """
     Generates the latest metrics data in either Prometheus or OpenMetrics format.
 
+    :param CollectorRegistry registry: A registry for collect metrics.
     :param bool openmetrics_format: A flag indicating whether to generate metrics in OpenMetrics format.
     :returns: MetricsResponse
     """
-
-    registry = REGISTRY
 
     if "PROMETHEUS_MULTIPROC_DIR" in os.environ:
         registry = CollectorRegistry()

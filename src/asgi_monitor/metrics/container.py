@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import ClassVar, cast
+from typing import cast
 
-from prometheus_client import Counter, Gauge, Histogram, metrics
+from prometheus_client import CollectorRegistry, Counter, Gauge, Histogram, metrics
 
 __all__ = ("MetricsContainer",)
 
@@ -12,10 +12,10 @@ __all__ = ("MetricsContainer",)
 class MetricsContainer:
     """Prometheus's metrics container"""
 
-    _metrics: ClassVar[dict[str, metrics.MetricWrapperBase]] = {}
-
-    def __init__(self, prefix: str = "asgi") -> None:
+    def __init__(self, prefix: str, registry: CollectorRegistry) -> None:
+        self._metrics: dict[str, metrics.MetricWrapperBase] = {}
         self._prefix = prefix
+        self._registry = registry
 
     def app_info(self) -> Gauge:
         metric_name = f"{self._prefix}_app_info"
@@ -25,6 +25,7 @@ class MetricsContainer:
                 name=metric_name,
                 documentation="ASGI application information",
                 labelnames=["app_name"],
+                registry=self._registry,
             )
         return cast("Gauge", self._metrics[metric_name])
 
@@ -36,6 +37,7 @@ class MetricsContainer:
                 name=metric_name,
                 documentation="Total count of requests by method and path",
                 labelnames=["app_name", "method", "path"],
+                registry=self._registry,
             )
         return cast("Counter", self._metrics[metric_name])
 
@@ -47,6 +49,7 @@ class MetricsContainer:
                 name=metric_name,
                 documentation="Total count of responses by method, path and status codes",
                 labelnames=["app_name", "method", "path", "status_code"],
+                registry=self._registry,
             )
         return cast("Counter", self._metrics[metric_name])
 
@@ -58,6 +61,7 @@ class MetricsContainer:
                 name=metric_name,
                 documentation="Histogram of request duration by path, in seconds",
                 labelnames=["app_name", "method", "path"],
+                registry=self._registry,
             )
         return cast("Histogram", self._metrics[metric_name])
 
@@ -70,6 +74,7 @@ class MetricsContainer:
                 documentation="Gauge of requests by method and path currently being processed",
                 labelnames=["app_name", "method", "path"],
                 multiprocess_mode="livesum",
+                registry=self._registry,
             )
         return cast("Gauge", self._metrics[metric_name])
 
@@ -81,5 +86,6 @@ class MetricsContainer:
                 name=metric_name,
                 documentation="Total count of exceptions raised by path and exception type",
                 labelnames=["app_name", "method", "path", "exception_type"],
+                registry=self._registry,
             )
         return cast("Counter", self._metrics[metric_name])

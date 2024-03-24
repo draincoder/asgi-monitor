@@ -11,7 +11,7 @@ from starlette.requests import Request
 from starlette.responses import PlainTextResponse
 from starlette.routing import Route
 
-from asgi_monitor.integrations.starlette import TracingConfig, setup_metrics, setup_tracing
+from asgi_monitor.integrations.starlette import MetricsConfig, TracingConfig, setup_metrics, setup_tracing
 from asgi_monitor.logging import configure_logging
 from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
 
@@ -35,11 +35,14 @@ def create_app() -> Starlette:
     )
     tracer = TracerProvider(resource=resource)
     trace.set_tracer_provider(tracer)
-    config = TracingConfig(tracer_provider=tracer)
+
+    trace_config = TracingConfig(tracer_provider=tracer)
+    metrics_config = MetricsConfig(app_name="starlette", include_trace_exemplar=True)
 
     app = Starlette(debug=True, routes=[Route("/", endpoint=index, methods=["GET"])])
-    setup_metrics(app, app_name="starlette", include_trace_exemplar=True, include_metrics_endpoint=True)
-    setup_tracing(app=app, config=config)
+
+    setup_metrics(app=app, config=metrics_config)
+    setup_tracing(app=app, config=trace_config)
 
     return app
 

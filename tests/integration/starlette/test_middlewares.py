@@ -10,7 +10,7 @@ from starlette.routing import Route
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import Span
 
-from asgi_monitor.integrations.starlette import setup_metrics, setup_tracing
+from asgi_monitor.integrations.starlette import MetricsConfig, setup_metrics, setup_tracing
 from asgi_monitor.metrics import get_latest_metrics
 from tests.integration.utils import build_starlette_tracing_config, starlette_app
 
@@ -124,7 +124,8 @@ async def test_tracing_partial_match() -> None:
 async def test_metrics() -> None:
     # Arrange
     app = Starlette()
-    setup_metrics(app=app, app_name="test", include_metrics_endpoint=True, include_trace_exemplar=False)
+    metrics_config = MetricsConfig(app_name="test", include_metrics_endpoint=True, include_trace_exemplar=False)
+    setup_metrics(app=app, config=metrics_config)
 
     # Act
     async with starlette_app(app) as client:
@@ -143,7 +144,8 @@ async def test_metrics() -> None:
 async def test_error_metrics() -> None:
     # Arrange
     app = Starlette(routes=[Route("/error", endpoint=error, methods=["GET"])])
-    setup_metrics(app=app, app_name="test", include_metrics_endpoint=True, include_trace_exemplar=False)
+    metrics_config = MetricsConfig(app_name="test", include_metrics_endpoint=True, include_trace_exemplar=False)
+    setup_metrics(app=app, config=metrics_config)
 
     # Act
     async with starlette_app(app) as client:
@@ -169,9 +171,10 @@ async def test_error_metrics() -> None:
 async def test_metrics_with_tracing() -> None:
     # Arrange
     trace_config, _ = build_starlette_tracing_config()
+    metrics_config = MetricsConfig(app_name="test", include_metrics_endpoint=False, include_trace_exemplar=True)
     app = Starlette(routes=[Route("/", endpoint=index, methods=["GET"])])
 
-    setup_metrics(app=app, app_name="test", include_metrics_endpoint=False, include_trace_exemplar=True)
+    setup_metrics(app=app, config=metrics_config)
     setup_tracing(app=app, config=trace_config)
 
     # Act
@@ -180,7 +183,7 @@ async def test_metrics_with_tracing() -> None:
 
         # Assert
         assert response.status_code == 200
-        metrics = get_latest_metrics(openmetrics_format=True)
+        metrics = get_latest_metrics(app.state.metrics_registry, openmetrics_format=True)
         pattern = (
             r"starlette_request_duration_seconds_bucket\{"
             r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'

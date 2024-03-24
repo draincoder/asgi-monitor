@@ -1,4 +1,4 @@
 uvicorn
 fastapi
-asgi-monitor
+asgi-monitor @ git+https://github.com/draincoder/asgi-monitor@develop
 opentelemetry-exporter-otlp

@@ -7,7 +7,7 @@ from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExport
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
-from asgi_monitor.integrations.fastapi import TracingConfig, setup_metrics, setup_tracing
+from asgi_monitor.integrations.fastapi import MetricsConfig, TracingConfig, setup_metrics, setup_tracing
 from asgi_monitor.logging import configure_logging
 from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
 
@@ -33,11 +33,14 @@ def create_app() -> FastAPI:
     tracer = TracerProvider(resource=resource)
     trace.set_tracer_provider(tracer)
     tracer.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=GRPC_ENDPOINT)))
-    config = TracingConfig(tracer_provider=tracer)
+
+    trace_config = TracingConfig(tracer_provider=tracer)
+    metrics_config = MetricsConfig(app_name=APP_NAME, include_trace_exemplar=True)
 
     app = FastAPI(debug=True)
-    setup_metrics(app=app, app_name=APP_NAME, include_trace_exemplar=True, include_metrics_endpoint=True)
-    setup_tracing(app=app, config=config)
+
+    setup_metrics(app=app, config=metrics_config)
+    setup_tracing(app=app, config=trace_config)
     setup_routes(app=app)
 
     return app

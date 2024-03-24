@@ -2,13 +2,14 @@ import os
 
 import pytest
 
+from asgi_monitor.metrics.config import _build_default_registry
 from asgi_monitor.metrics.container import MetricsContainer
 from asgi_monitor.metrics.manager import MetricsManager
 
 
 @pytest.fixture(scope="session")
 def container() -> MetricsContainer:
-    return MetricsContainer(prefix="test")
+    return MetricsContainer(prefix="test", registry=_build_default_registry())
 
 
 @pytest.fixture(scope="session")

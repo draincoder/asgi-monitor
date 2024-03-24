@@ -46,7 +46,7 @@ pip install asgi-monitor
 ```python
 import logging
 
-from asgi_monitor.integrations.fastapi import setup_metrics
+from asgi_monitor.integrations.fastapi import MetricsConfig, setup_metrics
 from asgi_monitor.logging import configure_logging
 from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
 from fastapi import FastAPI
@@ -58,9 +58,10 @@ app = FastAPI(debug=True)
 
 def run_app() -> None:
     log_config = build_uvicorn_log_config(level=logging.INFO, json_format=True, include_trace=False)
+    metrics_config = MetricsConfig(app_name="fastapi")
 
     configure_logging(level=logging.INFO, json_format=True, include_trace=False)
-    setup_metrics(app, app_name="fastapi", include_metrics_endpoint=True, include_trace_exemplar=False)
+    setup_metrics(app, metrics_config)
 
     logger.info("App is ready to start")
 
@@ -123,9 +124,9 @@ resource = Resource.create(
 tracer = TracerProvider(resource=resource)
 trace.set_tracer_provider(tracer)
 tracer.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint="http://asgi-monitor.tempo:4317")))
-config = TracingConfig(tracer_provider=tracer)
+trace_config = TracingConfig(tracer_provider=tracer)
 
-setup_tracing(app=app, config=config)  # Must be configured last
+setup_tracing(app=app, config=trace_config)  # Must be configured last
 ```
 
 1. Install the necessary exporter, for example [opentelemetry-exporter-jaeger](https://pypi.org/project/opentelemetry-exporter-jaeger/) or the standard [opentelemetry-exporter-otlp](https://pypi.org/project/opentelemetry-exporter-otlp/)

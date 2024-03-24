@@ -11,23 +11,24 @@ from starlette.responses import Response
 from starlette.routing import Match
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
-from asgi_monitor.metrics import get_latest_metrics
-from asgi_monitor.metrics.container import MetricsContainer
-from asgi_monitor.metrics.manager import MetricsManager
-
 if TYPE_CHECKING:
     from starlette.applications import Starlette
     from starlette.requests import Request
     from starlette.types import ASGIApp, Receive, Scope, Send
 
+from asgi_monitor.metrics import get_latest_metrics
+from asgi_monitor.metrics.config import CommonMetricsConfig
+from asgi_monitor.metrics.container import MetricsContainer
+from asgi_monitor.metrics.manager import MetricsManager
 from asgi_monitor.tracing.config import CommonTracingConfig
 from asgi_monitor.tracing.middleware import build_open_telemetry_middleware
 
 __all__ = (
     "TracingConfig",
     "TracingMiddleware",
-    "MetricsMiddleware",
     "setup_tracing",
+    "MetricsConfig",
+    "MetricsMiddleware",
     "setup_metrics",
 )
 
@@ -69,13 +70,15 @@ def _get_path(request: Request) -> tuple[str, bool]:
 
 @dataclass
 class TracingConfig(CommonTracingConfig):
-    """Configuration class for the OpenTelemetry middleware.
+    """
+    Configuration class for the OpenTelemetry middleware.
     Consult the OpenTelemetry ASGI documentation for more info about the configuration options.
     https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/asgi/asgi.html
     """
 
     exclude_urls_env_key: str = "STARLETTE"
-    """Key to use when checking whether a list of excluded urls is passed via ENV.
+    """
+    Key to use when checking whether a list of excluded urls is passed via ENV.
     OpenTelemetry supports excluding urls by passing an env in the format '{exclude_urls_env_key}_EXCLUDED_URLS'.
     """
 
@@ -84,6 +87,14 @@ class TracingConfig(CommonTracingConfig):
     Callback which should return a string and a tuple, representing the desired default span name and a dictionary
     with any additional span attributes to set.
     """
+
+
+@dataclass
+class MetricsConfig(CommonMetricsConfig):
+    """Configuration class for the Metrics middleware."""
+
+    metrics_prefix: str = "starlette"
+    """The prefix to use for the metrics."""
 
 
 class TracingMiddleware:
@@ -108,12 +119,11 @@ class MetricsMiddleware(BaseHTTPMiddleware):
         self,
         app: ASGIApp,
         app_name: str,
-        metrics_prefix: str,
+        container: MetricsContainer,
         *,
         include_trace_exemplar: bool,
     ) -> None:
         super().__init__(app)
-        container = MetricsContainer(prefix=metrics_prefix)
         self.metrics = MetricsManager(app_name=app_name, container=container)
         self.include_exemplar = include_trace_exemplar
         self.metrics.add_app_info()
@@ -166,7 +176,8 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
 
 async def get_metrics(request: Request) -> Response:
-    response = get_latest_metrics(openmetrics_format=False)
+    registry = request.app.state.metrics_registry
+    response = get_latest_metrics(registry, openmetrics_format=False)
     return Response(
         content=response.payload,
         status_code=response.status_code,
@@ -187,34 +198,24 @@ def setup_tracing(app: Starlette, config: TracingConfig) -> None:
     app.add_middleware(TracingMiddleware, config=config)
 
 
-def setup_metrics(
-    app: Starlette,
-    app_name: str,
-    metrics_prefix: str = "starlette",
-    *,
-    include_trace_exemplar: bool,
-    include_metrics_endpoint: bool,
-) -> None:
+def setup_metrics(app: Starlette, config: MetricsConfig) -> None:
     """
     Set up metrics for a Starlette application.
     This function adds a MetricsMiddleware to the Starlette application with the specified parameters.
-    If include_metrics_endpoint is True, it also adds a route for "/metrics" that returns Prometheus default metrics.
 
     :param Starlette app: The Starlette application instance.
-    :param str app_name: The name of the Starlette application.
-    :param str metrics_prefix: The prefix to use for the metrics (default is "starlette").
-    :param bool include_trace_exemplar: Whether to include trace exemplars in the metrics.
-    :param bool include_metrics_endpoint: Whether to include a /metrics endpoint.
+    :param MetricsConfig config: Configuration for the metrics.
     :returns: None
     """
 
+    app.state.metrics_registry = config.registry
     app.add_middleware(
         MetricsMiddleware,
-        app_name=app_name,
-        metrics_prefix=metrics_prefix,
-        include_trace_exemplar=include_trace_exemplar,
+        app_name=config.app_name,
+        container=MetricsContainer(config.metrics_prefix, config.registry),
+        include_trace_exemplar=config.include_trace_exemplar,
     )
-    if include_metrics_endpoint:
+    if config.include_metrics_endpoint:
         app.add_route(
             path="/metrics",
             route=get_metrics,
