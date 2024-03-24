@@ -5,10 +5,10 @@ __all__ = ("build_open_telemetry_middleware",)
 from opentelemetry.instrumentation.asgi import OpenTelemetryMiddleware
 from opentelemetry.util.http import get_excluded_urls
 
-from asgi_monitor.tracing.config import CommonTracingConfig
+from asgi_monitor.tracing.config import BaseTracingConfig
 
 
-def build_open_telemetry_middleware(app: Any, config: CommonTracingConfig) -> OpenTelemetryMiddleware:
+def build_open_telemetry_middleware(app: Any, config: BaseTracingConfig) -> OpenTelemetryMiddleware:
     return OpenTelemetryMiddleware(
         app=app,
         client_request_hook=config.client_request_hook_handler,

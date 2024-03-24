@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 
 from prometheus_client import CollectorRegistry
 
-__all__ = ("CommonMetricsConfig",)
+__all__ = ("BaseMetricsConfig",)
 
 
 def _build_default_registry() -> CollectorRegistry:
@@ -10,7 +10,7 @@ def _build_default_registry() -> CollectorRegistry:
 
 
 @dataclass
-class CommonMetricsConfig:
+class BaseMetricsConfig:
     """Configuration class for the Metrics middleware."""
 
     app_name: str

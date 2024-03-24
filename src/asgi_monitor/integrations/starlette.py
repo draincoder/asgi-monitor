@@ -17,10 +17,10 @@ if TYPE_CHECKING:
     from starlette.types import ASGIApp, Receive, Scope, Send
 
 from asgi_monitor.metrics import get_latest_metrics
-from asgi_monitor.metrics.config import CommonMetricsConfig
+from asgi_monitor.metrics.config import BaseMetricsConfig
 from asgi_monitor.metrics.container import MetricsContainer
 from asgi_monitor.metrics.manager import MetricsManager
-from asgi_monitor.tracing.config import CommonTracingConfig
+from asgi_monitor.tracing.config import BaseTracingConfig
 from asgi_monitor.tracing.middleware import build_open_telemetry_middleware
 
 __all__ = (
@@ -69,7 +69,7 @@ def _get_path(request: Request) -> tuple[str, bool]:
 
 
 @dataclass
-class TracingConfig(CommonTracingConfig):
+class TracingConfig(BaseTracingConfig):
     """
     Configuration class for the OpenTelemetry middleware.
     Consult the OpenTelemetry ASGI documentation for more info about the configuration options.
@@ -90,7 +90,7 @@ class TracingConfig(CommonTracingConfig):
 
 
 @dataclass
-class MetricsConfig(CommonMetricsConfig):
+class MetricsConfig(BaseMetricsConfig):
     """Configuration class for the Metrics middleware."""
 
     metrics_prefix: str = "starlette"

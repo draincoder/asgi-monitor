@@ -1,3 +1,3 @@
-from .config import CommonTracingConfig
+from .config import BaseTracingConfig
 
-__all__ = ("CommonTracingConfig",)
+__all__ = ("BaseTracingConfig",)

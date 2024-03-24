@@ -80,6 +80,17 @@ In this example, all logs will be presented in JSON format and the following met
 5. `fastapi_requests_in_progress` - Gauge of requests by method and path currently being processed (Gauge)
 6. `fastapi_requests_exceptions_total` - Total count of exceptions raised by path and exception type (Counter)
 
+You can also set up a global `REGISTRY` in `MetricsConfig` to support your **global** metrics,
+but it is better to use your own non-global registry or leave the default registry
+
+```python
+from prometheus_client import REGISTRY
+from asgi_monitor.integrations.fastapi import MetricsConfig
+
+metrics_config = MetricsConfig(app_name="fastapi", registry=REGISTRY)
+```
+
+
 And these metrics are available by endpoint `/metrics`,
 but you can import `get_latest_metrics` from `asgi_monitor.metrics` to create a custom endpoint.
 

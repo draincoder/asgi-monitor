@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Callable
 
-__all__ = ("CommonTracingConfig",)
+__all__ = ("BaseTracingConfig",)
 
 
 from opentelemetry.metrics import Meter, MeterProvider
@@ -13,7 +13,7 @@ OpenTelemetryHookHandler = Callable[[Span, dict], None]
 
 
 @dataclass
-class CommonTracingConfig:
+class BaseTracingConfig:
     """
     Configuration class for the OpenTelemetry middleware.
     Consult the OpenTelemetry ASGI documentation for more info about the configuration options.

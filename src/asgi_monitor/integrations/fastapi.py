@@ -12,9 +12,9 @@ from asgi_monitor.integrations.starlette import (
     _get_default_span_details,
     get_metrics,
 )
-from asgi_monitor.metrics.config import CommonMetricsConfig
+from asgi_monitor.metrics.config import BaseMetricsConfig
 from asgi_monitor.metrics.container import MetricsContainer
-from asgi_monitor.tracing import CommonTracingConfig
+from asgi_monitor.tracing import BaseTracingConfig
 
 __all__ = (
     "TracingConfig",
@@ -27,7 +27,7 @@ __all__ = (
 
 
 @dataclass
-class MetricsConfig(CommonMetricsConfig):
+class MetricsConfig(BaseMetricsConfig):
     """Configuration class for the Metrics middleware."""
 
     metrics_prefix: str = "fastapi"
@@ -35,7 +35,7 @@ class MetricsConfig(CommonMetricsConfig):
 
 
 @dataclass
-class TracingConfig(CommonTracingConfig):
+class TracingConfig(BaseTracingConfig):
     """
     Configuration class for the OpenTelemetry middleware.
     Consult the OpenTelemetry ASGI documentation for more info about the configuration options.
