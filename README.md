@@ -1,9 +1,9 @@
 <div align="center">
-  <pictire>
+  <picture>
     <source media="(prefers-color-scheme: dark)" srcset="https://github.com/draincoder/asgi-monitor/blob/master/docs/logo/asgi-monitor-dark.png?raw=true">
     <source media="(prefers-color-scheme: light)" srcset="https://github.com/draincoder/asgi-monitor/blob/master/docs/logo/asgi-monitor-light.png?raw=true">
-    <img alt="asgi-monitor logo" src="docs/logo/asgi-monitor-light.png" height="300">
-  </pictire>
+    <img alt="asgi-monitor logo" src="docs/logo/asgi-monitor-dark.png" height="300">
+  </picture>
 
   <hr>
 
