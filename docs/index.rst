@@ -6,8 +6,11 @@ A library for easy and fast configuration of logging, tracing and metrics for AS
 .. toctree::
    :caption: Contents:
 
-   quickstart
-
+   overview/index
+   integrations/index
+   logging/index
+   metrics/index
+   tracing/index
 
 .. toctree::
     :hidden:
