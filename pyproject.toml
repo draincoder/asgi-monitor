@@ -66,13 +66,15 @@ wsgi = [
 [tool.pdm.scripts]
 lint = "pre-commit run --all-files"
 test = "pytest tests --cov=asgi_monitor --cov-append --cov-report term-missing -v"
+doc = "sphinx-build -M html docs docs-build"
+doc-clean= "sphinx-build -M clean docs docs-build"
 
 [tool.ruff]
 line-length = 120
 target-version="py310"
 src = ["src"]
 include = ["src/**.py", "tests/**.py"]
-exclude = ["examples/real_world/app/main.py"]
+exclude = ["examples/real_world/app/main.py", "docs/**.py"]
 
 lint.select = [
     "ALL",

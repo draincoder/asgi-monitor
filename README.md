@@ -8,6 +8,7 @@
   <hr>
 
   [![PyPI version](https://badge.fury.io/py/asgi-monitor.svg)](https://pypi.python.org/pypi/asgi-monitor)
+  [![Documentation Status](https://readthedocs.org/projects/asgi-monitor/badge/?version=latest)](https://asgi-monitor.readthedocs.io/en/latest/?badge=latest)
   [![Test](https://github.com/draincoder/asgi-monitor/actions/workflows/ci.yaml/badge.svg)](https://github.com/draincoder/asgi-monitor/actions/workflows/ci.yaml)
   [![Supported versions](https://img.shields.io/pypi/pyversions/asgi-monitor.svg)](https://pypi.python.org/pypi/asgi-monitor)
   [![Downloads](https://img.shields.io/pypi/dm/asgi-monitor.svg)](https://pypistats.org/packages/asgi-monitor)
