@@ -30,6 +30,7 @@ dependencies = [
 asgi-monitor = "asgi_monitor.cli:main"
 
 [project.urls]
+"Documentation" = "https://asgi-monitor.readthedocs.io/en/latest/"
 "Source" = "https://github.com/draincoder/asgi-monitor"
 "Homepage" = "https://github.com/draincoder/asgi-monitor"
 "Bug Tracker" = "https://github.com/draincoder/asgi-monitor/issues"
