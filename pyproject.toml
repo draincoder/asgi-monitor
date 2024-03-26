@@ -63,12 +63,6 @@ wsgi = [
     "gunicorn>=21.2.0",
 ]
 
-[tool.pdm.scripts]
-lint = "pre-commit run --all-files"
-test = "pytest tests --cov=asgi_monitor --cov-append --cov-report term-missing -v"
-doc = "sphinx-build -M html docs docs-build"
-doc-clean= "sphinx-build -M clean docs docs-build"
-
 [tool.ruff]
 line-length = 120
 target-version="py310"
