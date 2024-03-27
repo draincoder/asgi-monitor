@@ -1,8 +1,8 @@
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/draincoder/asgi-monitor/blob/develop/docs/logo/asgi-monitor-dark.svg?raw=true">
-    <source media="(prefers-color-scheme: light)" srcset="https://github.com/draincoder/asgi-monitor/blob/develop/docs/logo/asgi-monitor-light.svg?raw=true">
-    <img alt="asgi-monitor logo" src="docs/logo/asgi-monitor-dark.svg" height="300">
+    <source media="(prefers-color-scheme: dark)" srcset="https://github.com/draincoder/asgi-monitor/blob/develop/docs/logo/asgi-monitor-dark.png?raw=true">
+    <source media="(prefers-color-scheme: light)" srcset="https://github.com/draincoder/asgi-monitor/blob/develop/docs/logo/asgi-monitor-light.png?raw=true">
+    <img alt="asgi-monitor logo" src="docs/logo/asgi-monitor-dark.png" height="300">
   </picture>
 
   <hr>

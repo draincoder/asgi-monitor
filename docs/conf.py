@@ -53,8 +53,8 @@ html_theme = "furo"
 html_favicon = "logo/asgi-monitor-favicon.png"
 html_theme_options = {
     "sidebar_hide_name": True,
-    "light_logo": "asgi-monitor-light.svg",
-    "dark_logo": "asgi-monitor-dark.svg",
+    "light_logo": "asgi-monitor-light.png",
+    "dark_logo": "asgi-monitor-dark.png",
 }
 
 

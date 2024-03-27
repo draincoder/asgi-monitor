@@ -17,7 +17,7 @@ The purpose of the library is to easily integrate the application with the **mon
 * Structlog_ logging with native **logging** module support
 
 Benefits of monitoring
-==================
+======================
 
 * **Real-time Visibility:** Monitoring web applications provides real-time visibility into their performance, allowing for quick identification and resolution of issues.
 
@@ -44,19 +44,19 @@ Example
 .. code-block:: python
    :caption: Adding metrics to the FastAPI
 
-    from asgi_monitor.integrations.fastapi import setup_metrics, MetricsConfig
-    from fastapi import FastAPI
-    from uvicorn import run
+   from asgi_monitor.integrations.fastapi import setup_metrics, MetricsConfig
+   from fastapi import FastAPI
+   from uvicorn import run
 
 
-    def run_app() -> None:
-        app = FastAPI()
-        setup_metrics(app, MetricsConfig(app_name="fastapi"))
-        run(app, host="127.0.0.1", port=8000)
+   def run_app() -> None:
+       app = FastAPI()
+       setup_metrics(app, MetricsConfig(app_name="fastapi"))
+       run(app, host="127.0.0.1", port=8000)
 
 
-    if __name__ == "__main__":
-        run_app()
+   if __name__ == "__main__":
+       run_app()
 
 After setting up, you can see visualization of default metrics in Grafana_
 
