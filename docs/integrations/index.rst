@@ -1,10 +1,10 @@
 Integrations
 *******************************
 
-Web frameworks
+
+FastAPI
 ==================
 
-Frameworks integrations:
 
-* FastAPI
-* Starlette
+Starlette
+==================
