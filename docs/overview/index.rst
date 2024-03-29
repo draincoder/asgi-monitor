@@ -28,8 +28,6 @@ Benefits of monitoring
 
 * **Security:** Monitoring can also help in detecting security vulnerabilities and unauthorized access attempts, enhancing the overall security posture of web applications.
 
-
-
 Installation
 ==================
 
