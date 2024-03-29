@@ -31,10 +31,15 @@ master_doc = "index"
 # ones.
 extensions = [
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
 ]
 autodoc_type_aliases = {}
 autodoc_typehints = "description"
 autodoc_inherit_docstrings = True
+autodoc_default_options = {
+    "members": True,
+    "undoc-members": False,
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

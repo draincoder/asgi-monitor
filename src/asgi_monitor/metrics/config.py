@@ -20,7 +20,7 @@ class BaseMetricsConfig:
     """The prefix to use for the metrics."""
 
     registry: CollectorRegistry = field(default_factory=_build_default_registry)
-    """A registry for metrics, you can also specify a global REGISTRY to support all your current metrics"""
+    """A registry for metrics, you can also specify a global REGISTRY to support all your current metrics."""
 
     include_trace_exemplar: bool = field(default=False)
     """Whether to include trace exemplars in the metrics."""

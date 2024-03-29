@@ -6,9 +6,8 @@ Wor what?
 
 .. _Prometheus: https://prometheus.io
 .. _OpenTelemetry: https://opentelemetry.io
-.. _Structlog: https://www.structlog.org/
-.. _FastAPI: https://fastapi.tiangolo.com
-.. _Grafana: https://grafana.com/
+.. _Structlog: https://www.structlog.org
+.. _Grafana: https://grafana.com
 
 The purpose of the library is to easily integrate the application with the **monitoring** infrastructure:
 
