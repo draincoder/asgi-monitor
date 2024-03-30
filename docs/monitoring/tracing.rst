@@ -121,3 +121,10 @@ After setting up, you can see visualization of traces in Grafana_
 
 .. image:: ../images/traces.png
    :alt: dashboard
+
+Gunicorn
+~~~~~~~~~~~~~~~~~~
+
+The ``BatchSpanProcessor`` is not fork-safe and doesn’t work well with Gunicorn.
+
+See `Working With Fork Process Models <https://opentelemetry-python.readthedocs.io/en/latest/examples/fork-process-model/README.html>`_.

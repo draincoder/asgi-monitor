@@ -4,10 +4,12 @@ asgi-monitor
 A library for easy and fast configuration of logging, tracing and metrics for ASGI applications.
 
 .. toctree::
-   :caption: Contents:
+   :caption: Contents
 
    overview/index
-   quickstart/index
+   monitoring/metrics
+   monitoring/tracing
+   monitoring/logging
    integrations/index
 
 .. toctree::
