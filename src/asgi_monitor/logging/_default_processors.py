@@ -9,8 +9,11 @@ def _build_default_processors(*, json_format: bool) -> list[Any]:
     pr = [
         structlog.stdlib.add_log_level,
         structlog.stdlib.add_logger_name,
-        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f"),
         structlog.contextvars.merge_contextvars,
+        structlog.stdlib.ExtraAdder(),
+        structlog.dev.set_exc_info,
+        structlog.processors.TimeStamper(fmt="%Y-%m-%d %H:%M:%S.%f", utc=True),
+        structlog.processors.dict_tracebacks,
         structlog.processors.CallsiteParameterAdder(
             {
                 structlog.processors.CallsiteParameter.PATHNAME,
@@ -25,6 +28,6 @@ def _build_default_processors(*, json_format: bool) -> list[Any]:
         ),
     ]
     if json_format:
-        pr.append(structlog.processors.format_exc_info)
+        pr.insert(0, structlog.processors.format_exc_info)
 
     return pr
