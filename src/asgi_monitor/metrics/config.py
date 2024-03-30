@@ -9,7 +9,7 @@ def _build_default_registry() -> CollectorRegistry:
     return CollectorRegistry(auto_describe=True)
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class BaseMetricsConfig:
     """Configuration class for the Metrics middleware."""
 

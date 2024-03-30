@@ -4,6 +4,8 @@ __all__ = ("MetricsManager",)
 
 
 class MetricsManager:
+    __slots__ = ("_app_name", "_container")
+
     def __init__(self, app_name: str, container: MetricsContainer) -> None:
         self._app_name = app_name
         self._container = container

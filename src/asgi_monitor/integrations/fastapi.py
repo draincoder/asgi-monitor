@@ -26,7 +26,7 @@ __all__ = (
 )
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class MetricsConfig(BaseMetricsConfig):
     """Configuration class for the Metrics middleware."""
 
@@ -34,7 +34,7 @@ class MetricsConfig(BaseMetricsConfig):
     """The prefix to use for the metrics."""
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class TracingConfig(BaseTracingConfig):
     """
     Configuration class for the OpenTelemetry middleware.

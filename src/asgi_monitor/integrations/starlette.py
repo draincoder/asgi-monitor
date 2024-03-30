@@ -68,7 +68,7 @@ def _get_path(request: Request) -> tuple[str, bool]:
     return request.url.path, False
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class TracingConfig(BaseTracingConfig):
     """
     Configuration class for the OpenTelemetry middleware.
@@ -89,7 +89,7 @@ class TracingConfig(BaseTracingConfig):
     """
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class MetricsConfig(BaseMetricsConfig):
     """Configuration class for the Metrics middleware."""
 
@@ -98,6 +98,8 @@ class MetricsConfig(BaseMetricsConfig):
 
 
 class TracingMiddleware:
+    __slots__ = ("app", "open_telemetry_middleware")
+
     def __init__(self, app: ASGIApp, config: TracingConfig) -> None:
         self.app = app
         self.open_telemetry_middleware = build_open_telemetry_middleware(app, config)
