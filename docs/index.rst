@@ -11,6 +11,7 @@ A library for easy and fast configuration of logging, tracing and metrics for AS
    monitoring/tracing
    monitoring/logging
    integrations/index
+   deployment/index
 
 .. toctree::
     :hidden:

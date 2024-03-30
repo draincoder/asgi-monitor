@@ -184,4 +184,4 @@ That's what every UvicornWorker is responsible for:
    GunicornStandaloneApplication(app, options).run()
 
 
-Check out the examples_ to figure out how it works!
+Check out the examples_ to figure out how it works.
