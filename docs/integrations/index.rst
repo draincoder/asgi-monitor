@@ -22,6 +22,8 @@ These frameworks have the **same** integration api, so here I will show you how 
 .. code-block:: python
    :caption: Configuring monitoring for the FastAPI
 
+   import logging
+
    from asgi_monitor.integrations.fastapi import MetricsConfig, TracingConfig, setup_metrics, setup_tracing
    from asgi_monitor.logging import configure_logging
    from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
@@ -33,27 +35,26 @@ These frameworks have the **same** integration api, so here I will show you how 
 
 
 
-   def run_app() -> None:
+   def create_app() -> None:
        configure_logging(level=logging.INFO, json_format=True, include_trace=False)
 
-        resource = Resource.create(
-            attributes={
-                "service.name": "fastapi",
-            },
-        )
-        tracer = TracerProvider(resource=resource)
-        trace.set_tracer_provider(tracer)
+       resource = Resource.create(
+           attributes={
+               "service.name": "fastapi",
+           },
+       )
+       tracer = TracerProvider(resource=resource)
+       trace.set_tracer_provider(tracer)
 
-        trace_config = TracingConfig(tracer_provider=tracer)
-        metrics_config = MetricsConfig(app_name="fastapi", include_trace_exemplar=True)
+       trace_config = TracingConfig(tracer_provider=tracer)
+       metrics_config = MetricsConfig(app_name="fastapi", include_trace_exemplar=True)
 
-        app = FastAPI(debug=True)
-        app.include_router(router)
+       app = FastAPI()
 
-        setup_metrics(app=app, config=metrics_config)
-        setup_tracing(app=app, config=trace_config)  # Must be configured last
+       setup_metrics(app=app, config=metrics_config)
+       setup_tracing(app=app, config=trace_config)  # Must be configured last
 
-        return app
+       return app
 
 
    if __name__ == "__main__":

@@ -12,6 +12,11 @@ In real_world_ example, you can see the configuration settings for the monitorin
 * **Vector** for collecting logs from containers
 * **Docker** for containerization and quick launch
 
+At the output, we have a real-time dashboard monitoring
+
+.. image:: ../images/dashboard.png
+   :alt: dashboard
+
 .. warning::
 
    Use these configs as a basis, but you need to take care of setting up authorization and long-term storage of information!
