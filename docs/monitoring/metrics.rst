@@ -50,8 +50,6 @@ The ``BaseMetricsConfig`` class is used to configure metrics, and it accepts the
 
 4. ``include_trace_exemplar`` (**bool**) - Whether to include trace exemplars in the metrics. Default is ``False``. This is only necessary if **tracing** is configured and metrics are collected in the ``OpenMetrics`` format.
 
-5. ``include_metrics_endpoint`` (**bool**) Whether to include a **/metrics** endpoint. Default is ``True``. Collecting metrics in ``text/plain`` format.
-
 You can also set up a **global** ``prometheus_client.REGISTRY`` in ``MetricsConfig`` to support your **global** metrics,
 but it is better to use your own **non-global** registry or leave the **default** registry.
 
@@ -71,7 +69,7 @@ but it is better to use your own **non-global** registry or leave the **default*
 Exporting
 ~~~~~~~~~~~~~~~~~~
 
-If you are using integration with the web framework, you can add metric exports via the config by setting ``include_metrics_endpoint`` to ``True``. In this case, the metrics will be exported via the **/metrics** endpoint in ``text/plain`` format.
+If you are using integration with the web framework, you can add metric exports via the config by setting ``include_metrics_endpoint`` to ``True`` or by explicitly calling ``add_metrics_endpoint``. In this case, the metrics will be exported via the **/metrics** endpoint in ``text/plain`` format.
 
 In case you need to **customize the endpoint**, add **protection**, use the **OpenMetrics** format, or just use **another method for delivering** metrics, then you should use the built-in ``get_latest_metrics`` function.
 
