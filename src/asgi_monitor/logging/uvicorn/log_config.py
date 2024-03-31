@@ -5,7 +5,7 @@ from typing import Any
 import structlog
 
 from asgi_monitor.logging._default_processors import _build_default_processors
-from asgi_monitor.logging._trace_processor import _extract_open_telemetry_trace_meta
+from asgi_monitor.logging.trace_processor import extract_opentelemetry_trace_meta
 
 __all__ = ("build_uvicorn_log_config",)
 
@@ -62,7 +62,7 @@ class TraceUvicornAccessConsoleFormatter(structlog.stdlib.ProcessorFormatter):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         processors = [
             _extract_uvicorn_request_meta,
-            _extract_open_telemetry_trace_meta,
+            extract_opentelemetry_trace_meta,
             structlog.stdlib.ProcessorFormatter.remove_processors_meta,
             structlog.dev.ConsoleRenderer(),
         ]
@@ -101,7 +101,7 @@ class TraceUvicornAccessJSONFormatter(structlog.stdlib.ProcessorFormatter):
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         processors = [
             _extract_uvicorn_request_meta,
-            _extract_open_telemetry_trace_meta,
+            extract_opentelemetry_trace_meta,
             structlog.stdlib.ProcessorFormatter.remove_processors_meta,
             structlog.processors.JSONRenderer(),
         ]

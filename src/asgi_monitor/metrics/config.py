@@ -24,6 +24,3 @@ class BaseMetricsConfig:
 
     include_trace_exemplar: bool = field(default=False)
     """Whether to include trace exemplars in the metrics."""
-
-    include_metrics_endpoint: bool = field(default=True)
-    """Whether to include a /metrics endpoint."""

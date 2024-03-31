@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 
 from asgi_monitor.integrations.starlette import MetricsConfig, setup_metrics, setup_tracing
 from asgi_monitor.metrics import get_latest_metrics
-from tests.integration.utils import build_starlette_tracing_config, starlette_app
+from tests.integration.factory import build_starlette_tracing_config, starlette_app
 
 
 async def index(request: Request) -> JSONResponse:
@@ -183,7 +183,7 @@ async def test_metrics_with_tracing() -> None:
 
         # Assert
         assert response.status_code == 200
-        metrics = get_latest_metrics(app.state.metrics_registry, openmetrics_format=True)
+        metrics = get_latest_metrics(metrics_config.registry, openmetrics_format=True)
         pattern = (
             r"starlette_request_duration_seconds_bucket\{"
             r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'

@@ -1,6 +1,10 @@
+from .config import BaseMetricsConfig
 from .container import MetricsContainer
 
-__all__ = ("MetricsManager",)
+__all__ = (
+    "MetricsManager",
+    "build_metrics_manager",
+)
 
 
 class MetricsManager:
@@ -87,3 +91,8 @@ class MetricsManager:
             path=path,
             exception_type=exception_type,
         ).inc()
+
+
+def build_metrics_manager(config: BaseMetricsConfig) -> MetricsManager:
+    container = MetricsContainer(config.metrics_prefix, config.registry)
+    return MetricsManager(app_name=config.app_name, container=container)

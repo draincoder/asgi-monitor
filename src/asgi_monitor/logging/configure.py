@@ -4,7 +4,7 @@ import sys
 import structlog
 
 from ._default_processors import _build_default_processors
-from ._trace_processor import _extract_open_telemetry_trace_meta
+from .trace_processor import extract_opentelemetry_trace_meta
 
 __all__ = ("configure_logging",)
 
@@ -42,7 +42,7 @@ def _configure_structlog(
     ]
 
     if include_trace:
-        processors.insert(-1, _extract_open_telemetry_trace_meta)  # after defaults
+        processors.insert(-1, extract_opentelemetry_trace_meta)  # after defaults
 
     structlog.configure_once(
         processors=processors,
@@ -62,7 +62,7 @@ def _configure_default_logging(
     default_processors = _build_default_processors(json_format=json_format)
 
     if include_trace:
-        default_processors.append(_extract_open_telemetry_trace_meta)  # after defaults
+        default_processors.append(extract_opentelemetry_trace_meta)  # after defaults
 
     logging_processors = [
         structlog.stdlib.ProcessorFormatter.remove_processors_meta,

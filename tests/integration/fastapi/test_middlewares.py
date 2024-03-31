@@ -6,7 +6,7 @@ from prometheus_client import REGISTRY
 
 from asgi_monitor.integrations.fastapi import MetricsConfig, setup_metrics, setup_tracing
 from asgi_monitor.metrics import get_latest_metrics
-from tests.integration.utils import build_fastapi_tracing_config, fastapi_app
+from tests.integration.factory import build_fastapi_tracing_config, fastapi_app
 
 router = APIRouter(prefix="")
 
@@ -78,7 +78,7 @@ async def test_metrics_with_tracing() -> None:
 
         # Assert
         assert response.status_code == 200
-        metrics = get_latest_metrics(app.state.metrics_registry, openmetrics_format=True)
+        metrics = get_latest_metrics(metrics_config.registry, openmetrics_format=True)
         pattern = (
             r"fastapi_request_duration_seconds_bucket\{"
             r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
