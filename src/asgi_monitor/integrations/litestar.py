@@ -33,8 +33,8 @@ __all__ = (
 
 
 def _get_default_span_details(scope: Scope) -> tuple[str, dict[str, Any]]:
-    route_handler_fn_name = scope["route_handler"].handler_name
-    return route_handler_fn_name, {SpanAttributes.HTTP_ROUTE: route_handler_fn_name}
+    method, path = scope["method"], scope["path"]
+    return f"{method} {path}", {SpanAttributes.HTTP_ROUTE: path}
 
 
 @dataclass(slots=True, frozen=True)

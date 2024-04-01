@@ -40,7 +40,8 @@ def _get_route_details(scope: Scope) -> str | None:
         match, _ = starlette_route.matches(scope)
         if match == Match.FULL:
             route = starlette_route.path
-        elif match == Match.PARTIAL:
+            break
+        if match == Match.PARTIAL:
             route = starlette_route.path
     return route
 

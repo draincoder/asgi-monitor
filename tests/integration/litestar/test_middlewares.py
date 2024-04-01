@@ -55,7 +55,7 @@ async def test_tracing() -> None:
                 "http.method": "GET",
                 "http.server_name": "testserver.local",
                 "http.user_agent": "testclient",
-                "http.route": "index",
+                "http.route": "/",
                 "http.status_code": 200,
                 "net.peer.ip": "testclient",
                 "net.peer.port": 50000,
