@@ -1,6 +1,6 @@
 [project]
 name = "asgi-monitor"
-version = "0.3.0"
+version = "0.4.0"
 description = "Quick and easy monitoring setup for ASGI application"
 requires-python = ">=3.10"
 readme = "README.md"
@@ -30,7 +30,7 @@ dependencies = [
 asgi-monitor = "asgi_monitor.cli:main"
 
 [project.urls]
-"Documentation" = "https://asgi-monitor.readthedocs.io/en/latest/"
+"Documentation" = "https://asgi-monitor.readthedocs.io"
 "Source" = "https://github.com/draincoder/asgi-monitor"
 "Homepage" = "https://github.com/draincoder/asgi-monitor"
 "Bug Tracker" = "https://github.com/draincoder/asgi-monitor/issues"
