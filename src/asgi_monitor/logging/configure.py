@@ -71,7 +71,7 @@ def _configure_default_logging(
 
     formatter = structlog.stdlib.ProcessorFormatter(
         foreign_pre_chain=default_processors,
-        processors=logging_processors,
+        processors=logging_processors,  # type: ignore[arg-type]
     )
 
     handler = logging.StreamHandler(stream=sys.stdout)

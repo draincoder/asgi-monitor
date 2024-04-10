@@ -34,7 +34,7 @@ async def fastapi_app(app: FastAPI) -> AsyncIterator[TestClient]:
 
 @asynccontextmanager
 async def litestar_app(app: Litestar) -> AsyncIterator[LitestarTestClient]:
-    async with LifespanManager(app):
+    async with LifespanManager(app):  # type: ignore[arg-type]
         yield LitestarTestClient(app)
 
 
