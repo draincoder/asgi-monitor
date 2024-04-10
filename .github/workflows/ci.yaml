@@ -20,10 +20,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
-
-      - name: Install Pre-Commit
-        run: python -m pip install pre-commit
+          python-version: 3.10
 
       - name: Load cached Pre-Commit Dependencies
         id: cached-pre-commit-dependencies
@@ -32,20 +29,35 @@ jobs:
           path: ~/.cache/pre-commit/
           key: pre-commit-4|${{ env.pythonLocation }}|${{ hashFiles('.pre-commit-config.yaml') }}
 
+      - name: Set up PDM
+        uses: pdm-project/setup-pdm@v4
+        with:
+          python-version: 3.10
+          allow-python-prereleases: false
+          cache: true
+          cache-dependency-path: |
+            ./pdm.lock
+
+      - name: Install dependencies
+        run: pdm install -G:all
+
+      - name: Set PYTHONPATH
+        run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
+
       - name: Execute Pre-Commit
-        run: pre-commit run --show-diff-on-failure --color=always --all-files
+        run: pdm run pre-commit run --show-diff-on-failure --color=always --all-files
 
   test:
-    name: "test ${{ matrix.python-version }}"
+    name: test ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os:
           - ubuntu-latest
         python-version:
-          - "3.10"
-          - "3.11"
-          - "3.12"
+          - 3.10
+          - 3.11
+          - 3.12
 
     steps:
       - name: Checkout

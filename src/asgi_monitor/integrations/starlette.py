@@ -109,9 +109,9 @@ class TracingMiddleware:
         send: Send,
     ) -> None:
         if scope["type"] != "http":
-            return await self.app(scope, receive, send)  # type: ignore[no-any-return]
+            return await self.app(scope, receive, send)
 
-        return await self.open_telemetry_middleware(scope, receive, send)  # type: ignore[no-any-return]
+        return await self.open_telemetry_middleware(scope, receive, send)  # type: ignore[arg-type]
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):

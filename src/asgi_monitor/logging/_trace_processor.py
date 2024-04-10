@@ -18,7 +18,7 @@ def _extract_open_telemetry_trace_meta(
             return event_dict
 
         ctx = span.get_span_context()
-        service_name = trace.get_tracer_provider().resource.attributes["service.name"]
+        service_name = trace.get_tracer_provider().resource.attributes["service.name"]  # type: ignore[attr-defined]
         parent = getattr(span, "parent", None)
 
         event_dict["span_id"] = trace.format_span_id(ctx.span_id)

@@ -18,7 +18,7 @@ def test_get_latest_openmetrics_false(manager: MetricsManager) -> None:
     expected = MetricsResponse(
         status_code=200,
         headers={"Content-Type": "text/plain; version=0.0.4; charset=utf-8"},
-        payload=IsBytes,
+        payload=IsBytes,  # type: ignore[arg-type]
     )
     manager.add_app_info()
     manager.add_request_in_progress(method="GET", path="/metrics")
@@ -39,7 +39,7 @@ def test_get_latest_openmetrics_true(manager: MetricsManager) -> None:
     expected = MetricsResponse(
         status_code=200,
         headers={"Content-Type": "application/openmetrics-text; version=1.0.0; charset=utf-8"},
-        payload=IsBytes,
+        payload=IsBytes,  # type: ignore[arg-type]
     )
     manager.add_app_info()
     manager.add_request_in_progress(method="GET", path="/metrics")
@@ -82,7 +82,7 @@ def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) 
     expected = MetricsResponse(
         status_code=200,
         headers={"Content-Type": "text/plain; version=0.0.4; charset=utf-8"},
-        payload=IsBytes,
+        payload=IsBytes,  # type: ignore[arg-type]
     )
 
     # Act

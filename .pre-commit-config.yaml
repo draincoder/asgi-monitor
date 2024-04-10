@@ -1,11 +1,13 @@
 default_language_version:
-  python: "3.10"
+  python: python3.10
+
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v3.1.0
+    rev: v3.2.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
     hooks:
@@ -17,22 +19,27 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
+
   - repo: https://github.com/python-formate/flake8-dunder-all
-    rev: v0.3.1
+    rev: v0.4.0
     hooks:
       - id: ensure-dunder-all
         exclude: "tests*|examples*"
         args: ["--use-tuple"]
+
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.0
+    rev: v0.3.4
     hooks:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.8.0
+
+  - repo: local
     hooks:
       - id: mypy
-        exclude: "docs*"
+        name: mypy
+        entry: mypy src tests --config-file ./pyproject.toml
         language: python
-        language_version: python3.10
+        types: [python]
+        require_serial: true
+        pass_filenames: false

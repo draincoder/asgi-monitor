@@ -118,14 +118,14 @@ def test_request_duration(container: MetricsContainer, manager: MetricsManager) 
     )
     expected_sample_bucket_with_exemplar = Sample(
         name="test_request_duration_seconds_bucket",
-        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "le": IsStr},
+        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "le": IsStr},  # type: ignore[dict-item]
         value=1.0,
         timestamp=None,
         exemplar=Exemplar(labels={"TraceID": "1234567"}, value=0.0, timestamp=FROZEN_TIMESTAMP),
     )
     expected_sample_bucket_without_exemplar = Sample(
         name="test_request_duration_seconds_bucket",
-        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "le": IsStr},
+        labels={"app_name": "asgi-monitor", "method": "GET", "path": "/metrics", "le": IsStr},  # type: ignore[dict-item]
         value=1.0,
         timestamp=None,
         exemplar=None,
@@ -165,7 +165,7 @@ def test_request_duration(container: MetricsContainer, manager: MetricsManager) 
 
     # Assert
     request_duration = container.request_duration().collect()
-    samples = request_duration[0].samples
+    samples = request_duration[0].samples  # type: ignore[index]
 
     assert_that(request_duration).extracting("name", "documentation", "type", "unit").is_equal_to([expected])
     assert_that(samples[0]).is_equal_to(expected_sample_bucket_with_exemplar)
