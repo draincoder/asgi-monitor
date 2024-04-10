@@ -38,9 +38,9 @@ def get_latest_metrics(registry: CollectorRegistry, *, openmetrics_format: bool)
     :returns: MetricsResponse
     """
 
-    if "PROMETHEUS_MULTIPROC_DIR" in os.environ:
+    if path := os.environ.get("PROMETHEUS_MULTIPROC_DIR"):
         registry = CollectorRegistry()
-        multiprocess.MultiProcessCollector(registry)
+        multiprocess.MultiProcessCollector(registry, path=path)
 
     if openmetrics_format:
         headers = {"Content-Type": OPENMETRICS_CONTENT_TYPE_LATEST}

@@ -116,6 +116,48 @@ def test_kwargs_log(capfd: CaptureFixture) -> None:
     )
 
 
+def test_logging_kwargs_log(capfd: CaptureFixture) -> None:
+    # Arrange
+    configure_logging(level=logging.INFO, json_format=True, include_trace=False)
+    logger = logging.getLogger("testlogger")
+
+    # Act
+    logger.info(
+        "kwargs message",
+        extra={
+            "test_int": 123,
+            "test_str": "params",
+            "test_dict": {"key": "value"},
+        },
+    )
+
+    # Assert
+    [kwargs_log] = read_json_logs(capfd)
+    assert_that(kwargs_log).is_equal_to(
+        {
+            "event": "kwargs message",
+            "message": "kwargs message",
+            "filename": "test_default_json.py",
+            "func_name": "test_logging_kwargs_log",
+            "level": "info",
+            "logger": "testlogger",
+            "module": "test_default_json",
+            "test_dict": {"key": "value"},
+            "test_int": 123,
+            "test_str": "params",
+            "thread_name": "MainThread",
+        },
+        ignore=["timestamp", "thread", "process", "pathname", "process_name"],
+    )
+    assert_that(kwargs_log).contains_key(
+        "timestamp",
+        "thread",
+        "process",
+        "pathname",
+        "process_name",
+    )
+
+
 def test_timestamp_format(capfd: CaptureFixture) -> None:
     # Arrange
     configure_logging(level=logging.INFO, json_format=True, include_trace=False)

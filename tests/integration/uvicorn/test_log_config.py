@@ -11,7 +11,7 @@ from uvicorn import Config
 from asgi_monitor.integrations.fastapi import setup_tracing
 from asgi_monitor.logging import configure_logging
 from asgi_monitor.logging.uvicorn import build_uvicorn_log_config
-from tests.integration.utils import build_fastapi_tracing_config, run_server
+from tests.integration.factory import build_fastapi_tracing_config, run_server
 from tests.utils import read_console_logs, read_json_logs
 
 logger = logging.getLogger(__name__)

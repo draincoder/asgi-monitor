@@ -12,7 +12,7 @@ from opentelemetry.trace import Span, TracerProvider
 OpenTelemetryHookHandler = Callable[[Span, dict], None]
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class BaseTracingConfig:
     """
     Configuration class for the OpenTelemetry middleware.

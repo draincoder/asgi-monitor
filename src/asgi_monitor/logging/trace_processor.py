@@ -4,10 +4,10 @@ from typing import Any
 
 from opentelemetry import trace
 
-__all__ = ("_extract_open_telemetry_trace_meta",)
+__all__ = ("extract_opentelemetry_trace_meta",)
 
 
-def _extract_open_telemetry_trace_meta(
+def extract_opentelemetry_trace_meta(
     wrapped_logger: logging.Logger | None,
     method_name: str,
     event_dict: dict[str, Any],

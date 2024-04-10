@@ -9,7 +9,7 @@ def _build_default_registry() -> CollectorRegistry:
     return CollectorRegistry(auto_describe=True)
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class BaseMetricsConfig:
     """Configuration class for the Metrics middleware."""
 
@@ -24,6 +24,3 @@ class BaseMetricsConfig:
 
     include_trace_exemplar: bool = field(default=False)
     """Whether to include trace exemplars in the metrics."""
-
-    include_metrics_endpoint: bool = field(default=True)
-    """Whether to include a /metrics endpoint."""

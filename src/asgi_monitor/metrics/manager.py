@@ -1,9 +1,15 @@
+from .config import BaseMetricsConfig
 from .container import MetricsContainer
 
-__all__ = ("MetricsManager",)
+__all__ = (
+    "MetricsManager",
+    "build_metrics_manager",
+)
 
 
 class MetricsManager:
+    __slots__ = ("_app_name", "_container")
+
     def __init__(self, app_name: str, container: MetricsContainer) -> None:
         self._app_name = app_name
         self._container = container
@@ -85,3 +91,8 @@ class MetricsManager:
             path=path,
             exception_type=exception_type,
         ).inc()
+
+
+def build_metrics_manager(config: BaseMetricsConfig) -> MetricsManager:
+    container = MetricsContainer(config.metrics_prefix, config.registry)
+    return MetricsManager(app_name=config.app_name, container=container)

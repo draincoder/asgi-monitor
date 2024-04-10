@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, Callable
 
 from opentelemetry import trace
@@ -18,8 +18,7 @@ if TYPE_CHECKING:
 
 from asgi_monitor.metrics import get_latest_metrics
 from asgi_monitor.metrics.config import BaseMetricsConfig
-from asgi_monitor.metrics.container import MetricsContainer
-from asgi_monitor.metrics.manager import MetricsManager
+from asgi_monitor.metrics.manager import MetricsManager, build_metrics_manager
 from asgi_monitor.tracing.config import BaseTracingConfig
 from asgi_monitor.tracing.middleware import build_open_telemetry_middleware
 
@@ -68,7 +67,7 @@ def _get_path(request: Request) -> tuple[str, bool]:
     return request.url.path, False
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class TracingConfig(BaseTracingConfig):
     """
     Configuration class for the OpenTelemetry middleware.
@@ -89,15 +88,20 @@ class TracingConfig(BaseTracingConfig):
     """
 
 
-@dataclass
+@dataclass(slots=True, frozen=True)
 class MetricsConfig(BaseMetricsConfig):
     """Configuration class for the Metrics middleware."""
 
     metrics_prefix: str = "starlette"
     """The prefix to use for the metrics."""
 
+    include_metrics_endpoint: bool = field(default=True)
+    """Whether to include a /metrics endpoint."""
+
 
 class TracingMiddleware:
+    __slots__ = ("app", "open_telemetry_middleware")
+
     def __init__(self, app: ASGIApp, config: TracingConfig) -> None:
         self.app = app
         self.open_telemetry_middleware = build_open_telemetry_middleware(app, config)
@@ -118,15 +122,13 @@ class MetricsMiddleware(BaseHTTPMiddleware):
     def __init__(
         self,
         app: ASGIApp,
-        app_name: str,
-        container: MetricsContainer,
+        metrics: MetricsManager,
         *,
         include_trace_exemplar: bool,
     ) -> None:
         super().__init__(app)
-        self.metrics = MetricsManager(app_name=app_name, container=container)
+        self.metrics = metrics
         self.include_exemplar = include_trace_exemplar
-        self.metrics.add_app_info()
 
     async def dispatch(self, request: Request, call_next: RequestResponseEndpoint) -> Response:
         if request.scope["type"] != "http":
@@ -191,7 +193,7 @@ def setup_tracing(app: Starlette, config: TracingConfig) -> None:
     The function adds a TracingMiddleware to the Starlette application based on TracingConfig.
 
     :param Starlette app: The FastAPI application instance.
-    :param TracingConfig config: The Open Telemetry config.
+    :param TracingConfig config: The OpenTelemetry config.
     :returns: None
     """
 
@@ -208,14 +210,16 @@ def setup_metrics(app: Starlette, config: MetricsConfig) -> None:
     :returns: None
     """
 
-    app.state.metrics_registry = config.registry
+    metrics = build_metrics_manager(config)
+    metrics.add_app_info()
+
     app.add_middleware(
         MetricsMiddleware,
-        app_name=config.app_name,
-        container=MetricsContainer(config.metrics_prefix, config.registry),
+        metrics=metrics,
         include_trace_exemplar=config.include_trace_exemplar,
     )
     if config.include_metrics_endpoint:
+        app.state.metrics_registry = config.registry
         app.add_route(
             path="/metrics",
             route=get_metrics,

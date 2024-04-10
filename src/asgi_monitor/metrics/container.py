@@ -12,6 +12,8 @@ __all__ = ("MetricsContainer",)
 class MetricsContainer:
     """Prometheus's metrics container"""
 
+    __slots__ = ("_metrics", "_registry", "_prefix")
+
     def __init__(self, prefix: str, registry: CollectorRegistry) -> None:
         self._metrics: dict[str, metrics.MetricWrapperBase] = {}
         self._prefix = prefix
