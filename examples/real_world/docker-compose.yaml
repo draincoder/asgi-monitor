@@ -47,7 +47,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
       - GF_DATABASE_WAL=true
-      - VIRTUAL_HOST=crypto_trader.grafana
+      - VIRTUAL_HOST=asgi-monitor.grafana
       - NETWORK_ACCESS=internal
       - VIRTUAL_PORT=3000
 
