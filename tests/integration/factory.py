@@ -2,7 +2,6 @@ import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
-from asgi_lifespan import LifespanManager
 from fastapi import FastAPI
 from litestar import Litestar
 from litestar.testing import TestClient as LitestarTestClient
@@ -22,20 +21,17 @@ from asgi_monitor.integrations.starlette import TracingConfig as StarletteTraceC
 
 @asynccontextmanager
 async def starlette_app(app: Starlette) -> AsyncIterator[TestClient]:
-    async with LifespanManager(app):
-        yield TestClient(app)
+    yield TestClient(app)
 
 
 @asynccontextmanager
 async def fastapi_app(app: FastAPI) -> AsyncIterator[TestClient]:
-    async with LifespanManager(app):
-        yield TestClient(app)
+    yield TestClient(app)
 
 
 @asynccontextmanager
 async def litestar_app(app: Litestar) -> AsyncIterator[LitestarTestClient]:
-    async with LifespanManager(app):  # type: ignore[arg-type]
-        yield LitestarTestClient(app)
+    yield LitestarTestClient(app)
 
 
 @asynccontextmanager
