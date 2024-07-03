@@ -33,7 +33,7 @@ __all__ = (
 
 
 def _get_default_span_details(scope: Scope) -> tuple[str, dict[str, Any]]:
-    method, path = scope["method"], scope["path"]  # The WebSocket is not supported
+    method, path = scope["method"], scope["path"]  # type: ignore[typeddict-item]  # The WebSocket is not supported
     return f"{method} {path}", {SpanAttributes.HTTP_ROUTE: path}
 
 
@@ -74,7 +74,7 @@ class TracingMiddleware(AbstractMiddleware):
         self.open_telemetry_middleware = build_open_telemetry_middleware(app, config)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        return await self.open_telemetry_middleware(scope, receive, send)  # type: ignore[no-any-return]
+        return await self.open_telemetry_middleware(scope, receive, send)  # type: ignore[arg-type]
 
 
 def _get_wrapped_send(send: Send, request_span: dict[str, float]) -> Callable:
@@ -146,7 +146,7 @@ class MetricsMiddleware(AbstractMiddleware):
             self.metrics.inc_responses_count(
                 method=method,
                 path=path,
-                status_code=request_span["status_code"],
+                status_code=request_span["status_code"],  # type: ignore[arg-type]
             )
             self.metrics.remove_request_in_progress(method=method, path=path)
 
