@@ -38,7 +38,7 @@ repos:
     hooks:
       - id: mypy
         name: mypy
-        entry: mypy src tests --config-file ./pyproject.toml
+        entry: mypy src tests examples --config-file ./pyproject.toml
         language: python
         types: [python]
         require_serial: true
