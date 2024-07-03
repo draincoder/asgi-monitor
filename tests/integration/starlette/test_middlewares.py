@@ -39,8 +39,10 @@ async def test_tracing() -> None:
         first_span, second_span, third_span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
 
         assert response.status_code == 200
-        assert_that(first_span.attributes).is_equal_to({"http.status_code": 200, "type": "http.response.start"})
-        assert_that(second_span.attributes).is_equal_to({"type": "http.response.body"})
+        assert_that(first_span.attributes).is_equal_to(
+            {"http.status_code": 200, "asgi.event.type": "http.response.start"},
+        )
+        assert_that(second_span.attributes).is_equal_to({"asgi.event.type": "http.response.body"})
         assert_that(third_span.attributes).is_equal_to(
             {
                 "http.scheme": "http",
@@ -48,6 +50,8 @@ async def test_tracing() -> None:
                 "net.host.port": 80,
                 "http.flavor": "1.1",
                 "http.target": "/",
+                "net.peer.ip": "testclient",
+                "net.peer.port": 50000,
                 "http.url": "http://testserver/",
                 "http.method": "GET",
                 "http.server_name": "testserver",
@@ -71,8 +75,10 @@ async def test_tracing_with_empty_routes() -> None:
         # Assert
         first_span, second_span, third_span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
         assert response.status_code == 405
-        assert_that(first_span.attributes).is_equal_to({"http.status_code": 405, "type": "http.response.start"})
-        assert_that(second_span.attributes).is_equal_to({"type": "http.response.body"})
+        assert_that(first_span.attributes).is_equal_to(
+            {"http.status_code": 405, "asgi.event.type": "http.response.start"},
+        )
+        assert_that(second_span.attributes).is_equal_to({"asgi.event.type": "http.response.body"})
         assert_that(third_span.attributes).is_equal_to(
             {
                 "http.scheme": "http",
@@ -86,6 +92,8 @@ async def test_tracing_with_empty_routes() -> None:
                 "http.user_agent": "testclient",
                 "http.status_code": 405,
                 "http.route": "/",
+                "net.peer.ip": "testclient",
+                "net.peer.port": 50000,
             },
         )
 
@@ -103,8 +111,10 @@ async def test_tracing_partial_match() -> None:
         # Assert
         first_span, second_span, third_span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
         assert response.status_code == 404
-        assert_that(first_span.attributes).is_equal_to({"http.status_code": 404, "type": "http.response.start"})
-        assert_that(second_span.attributes).is_equal_to({"type": "http.response.body"})
+        assert_that(first_span.attributes).is_equal_to(
+            {"http.status_code": 404, "asgi.event.type": "http.response.start"},
+        )
+        assert_that(second_span.attributes).is_equal_to({"asgi.event.type": "http.response.body"})
         assert_that(third_span.attributes).is_equal_to(
             {
                 "http.scheme": "http",
@@ -117,6 +127,8 @@ async def test_tracing_partial_match() -> None:
                 "http.server_name": "testserver",
                 "http.user_agent": "testclient",
                 "http.status_code": 404,
+                "net.peer.ip": "testclient",
+                "net.peer.port": 50000,
             },
         )
 

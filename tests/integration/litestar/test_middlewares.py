@@ -42,8 +42,10 @@ async def test_tracing() -> None:
         first_span, second_span, third_span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
 
         assert response.status_code == 200
-        assert_that(first_span.attributes).is_equal_to({"http.status_code": 200, "type": "http.response.start"})
-        assert_that(second_span.attributes).is_equal_to({"type": "http.response.body"})
+        assert_that(first_span.attributes).is_equal_to(
+            {"http.status_code": 200, "asgi.event.type": "http.response.start"},
+        )
+        assert_that(second_span.attributes).is_equal_to({"asgi.event.type": "http.response.body"})
         assert_that(third_span.attributes).is_equal_to(
             {
                 "http.scheme": "http",

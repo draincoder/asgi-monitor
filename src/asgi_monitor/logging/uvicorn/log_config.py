@@ -52,7 +52,7 @@ class UvicornAccessConsoleFormatter(structlog.stdlib.ProcessorFormatter):
         ]
 
         super().__init__(
-            processors=processors,  # type: ignore[arg-type]
+            processors=processors,
             foreign_pre_chain=_build_default_processors(json_format=False),
             pass_foreign_args=True,  # for args from record.args in positional_args
         )
@@ -68,7 +68,7 @@ class TraceUvicornAccessConsoleFormatter(structlog.stdlib.ProcessorFormatter):
         ]
 
         super().__init__(
-            processors=processors,  # type: ignore[arg-type]
+            processors=processors,
             foreign_pre_chain=_build_default_processors(json_format=False),
             pass_foreign_args=True,  # for args from record.args in positional_args
         )
@@ -91,7 +91,7 @@ class UvicornAccessJSONFormatter(structlog.stdlib.ProcessorFormatter):
         ]
 
         super().__init__(
-            processors=processors,  # type: ignore[arg-type]
+            processors=processors,
             foreign_pre_chain=_build_default_processors(json_format=True),
             pass_foreign_args=True,  # for args from record.args in positional_args
         )
@@ -107,7 +107,7 @@ class TraceUvicornAccessJSONFormatter(structlog.stdlib.ProcessorFormatter):
         ]
 
         super().__init__(
-            processors=processors,  # type: ignore[arg-type]
+            processors=processors,
             foreign_pre_chain=_build_default_processors(json_format=True),
             pass_foreign_args=True,  # for args from record.args in positional_args
         )
@@ -134,7 +134,7 @@ def build_uvicorn_log_config(
         default = UvicornDefaultJSONFormatter
         access = UvicornAccessJSONFormatter if not include_trace else TraceUvicornAccessJSONFormatter
     else:
-        default = UvicornDefaultConsoleFormatter  # type: ignore[assignment]
+        default = UvicornDefaultConsoleFormatter
         access = UvicornAccessConsoleFormatter if not include_trace else TraceUvicornAccessConsoleFormatter
 
     return {

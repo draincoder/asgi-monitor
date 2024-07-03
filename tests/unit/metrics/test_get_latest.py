@@ -69,7 +69,7 @@ def add_metrics() -> None:
 
 def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) -> None:
     # Arrange
-    multiprocessing.set_start_method("spawn")
+    multiprocessing.set_start_method("spawn", force=True)
     os.environ["PROMETHEUS_MULTIPROC_DIR"] = str(tmpdir)
     processes = [Process(target=add_metrics) for _ in range(10)]
 
