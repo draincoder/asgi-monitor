@@ -39,7 +39,7 @@ Configuration
 2. ``json_format`` (**bool**) - The format of the logs. If ``True``, the log will be rendered as JSON.
 3. ``include_trace`` (**bool**) - Include tracing information (``trace_id``, ``span_id``, ``parent_span_id``, ``service.name``).
 
-An example of a JSON logging configuration with the declaration of a ``logging`` logger and a ``sturctlog`` logger. They adhere to the same format, but the interaction with them at the code level differs.
+An example of a JSON logging configuration with the declaration of a ``logging`` logger and a ``structlog`` logger. They adhere to the same format, but the interaction with them at the code level differs.
 
 See structlog_ documentation for
 
