@@ -1,3 +1,4 @@
 from .config import BaseTracingConfig
+from .decorator import span
 
-__all__ = ("BaseTracingConfig",)
+__all__ = ("span", "BaseTracingConfig")

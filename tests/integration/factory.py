@@ -54,12 +54,12 @@ def build_fastapi_tracing_config() -> tuple[FastAPITraceConfig, InMemorySpanExpo
             "service.name": "fastapi",
         },
     )
-    tracer = TracerProvider(resource=resource)
-    trace.set_tracer_provider(tracer)
+    tracer_provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(tracer_provider)
     exporter = InMemorySpanExporter()
-    tracer.add_span_processor(SimpleSpanProcessor(exporter))
+    tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
 
-    return FastAPITraceConfig(tracer_provider=tracer), exporter
+    return FastAPITraceConfig(tracer_provider=tracer_provider), exporter
 
 
 def build_starlette_tracing_config() -> tuple[StarletteTraceConfig, InMemorySpanExporter]:
@@ -68,12 +68,12 @@ def build_starlette_tracing_config() -> tuple[StarletteTraceConfig, InMemorySpan
             "service.name": "starlette",
         },
     )
-    tracer = TracerProvider(resource=resource)
-    trace.set_tracer_provider(tracer)
+    tracer_provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(tracer_provider)
     exporter = InMemorySpanExporter()
-    tracer.add_span_processor(SimpleSpanProcessor(exporter))
+    tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
 
-    return StarletteTraceConfig(tracer_provider=tracer), exporter
+    return StarletteTraceConfig(tracer_provider=tracer_provider), exporter
 
 
 def build_litestar_tracing_config() -> tuple[LitestarTraceConfig, InMemorySpanExporter]:
@@ -82,9 +82,9 @@ def build_litestar_tracing_config() -> tuple[LitestarTraceConfig, InMemorySpanEx
             "service.name": "litestar",
         },
     )
-    tracer = TracerProvider(resource=resource)
-    trace.set_tracer_provider(tracer)
+    tracer_provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(tracer_provider)
     exporter = InMemorySpanExporter()
-    tracer.add_span_processor(SimpleSpanProcessor(exporter))
+    tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
 
-    return LitestarTraceConfig(tracer_provider=tracer), exporter
+    return LitestarTraceConfig(tracer_provider=tracer_provider), exporter
