@@ -33,10 +33,10 @@ def create_app() -> Starlette:
             "service.name": "starlette",
         },
     )
-    tracer = TracerProvider(resource=resource)
-    trace.set_tracer_provider(tracer)
+    tracer_provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(tracer_provider)
 
-    trace_config = TracingConfig(tracer_provider=tracer)
+    trace_config = TracingConfig(tracer_provider=tracer_provider)
     metrics_config = MetricsConfig(app_name="starlette", include_trace_exemplar=True)
 
     app = Starlette(debug=True, routes=[Route("/", endpoint=index, methods=["GET"])])

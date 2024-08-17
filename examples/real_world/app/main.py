@@ -30,11 +30,11 @@ def create_app() -> FastAPI:
             "compose_service": APP_NAME,
         },
     )
-    tracer = TracerProvider(resource=resource)
-    trace.set_tracer_provider(tracer)
-    tracer.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=GRPC_ENDPOINT)))
+    tracer_provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(tracer_provider)
+    tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint=GRPC_ENDPOINT)))
 
-    trace_config = TracingConfig(tracer_provider=tracer)
+    trace_config = TracingConfig(tracer_provider=tracer_provider)
     metrics_config = MetricsConfig(app_name=APP_NAME, include_trace_exemplar=True)
 
     app = FastAPI(debug=True)

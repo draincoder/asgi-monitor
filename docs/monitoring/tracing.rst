@@ -65,11 +65,11 @@ If you are **not an expert** in OpenTelemetry, then you just need to pass only t
            "service.name": "asgi-monitor",  # To identify the application
        },
    )
-   tracer = TracerProvider(resource=resource)
-   trace.set_tracer_provider(tracer)
-   tracer.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint="http://asgi-monitor.tempo:4317")))
+   tracer_provider = TracerProvider(resource=resource)
+   trace.set_tracer_provider(tracer_provider)
+   tracer_provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter(endpoint="http://asgi-monitor.tempo:4317")))
 
-   trace_config = TracingConfig(tracer_provider=tracer)
+   trace_config = TracingConfig(tracer_provider=tracer_provider)
 
 Trace management
 ~~~~~~~~~~~~~~~~~~
