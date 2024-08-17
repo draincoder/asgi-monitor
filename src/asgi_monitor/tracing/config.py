@@ -9,7 +9,7 @@ __all__ = ("BaseTracingConfig",)
 from opentelemetry.metrics import Meter, MeterProvider
 from opentelemetry.trace import Span, TracerProvider
 
-OpenTelemetryHookHandler = Callable[[Span, dict], None]
+OpenTelemetryHookHandler = Callable[[Span, dict[str, Any], dict[str, Any]], None]
 
 
 @dataclass(slots=True, frozen=True)
@@ -32,7 +32,7 @@ class BaseTracingConfig:
     with any additional span attributes to set.
     """
 
-    server_request_hook_handler: OpenTelemetryHookHandler | None = field(default=None)
+    server_request_hook_handler: Callable[[Span, dict[str, Any]], None] | None = field(default=None)
     """Optional callback which is called with the server span and ASGI scope object for every incoming request."""
 
     client_request_hook_handler: OpenTelemetryHookHandler | None = field(default=None)
