@@ -39,7 +39,7 @@ def test_empty_span_decorator(exporter: InMemorySpanExporter, tracer_provider: T
 
 def test_span_decorator(exporter: InMemorySpanExporter, tracer_provider: TracerProvider) -> None:
     # Arrange
-    @span_decorator(span_name="test", attributes={"test": "test"}, tracer=tracer_provider.get_tracer(__name__))
+    @span_decorator(name="test", attributes={"test": "test"}, tracer=tracer_provider.get_tracer(__name__))
     def action() -> None:
         time.sleep(0.01)
 
@@ -84,7 +84,7 @@ async def test_async_empty_span_decorator(exporter: InMemorySpanExporter, tracer
 
 async def test_async_span_decorator(exporter: InMemorySpanExporter, tracer_provider: TracerProvider) -> None:
     # Arrange
-    @span_decorator(span_name="test", attributes={"test": "test"}, tracer=tracer_provider.get_tracer(__name__))
+    @span_decorator(name="test", attributes={"test": "test"}, tracer=tracer_provider.get_tracer(__name__))
     async def action() -> None:
         await asyncio.sleep(0.01)
 
