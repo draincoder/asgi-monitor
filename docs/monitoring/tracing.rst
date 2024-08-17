@@ -101,6 +101,27 @@ See the cookbook_ for more information.
            logger.info("full energy")
        return {"message": "ok", "status": "success"}
 
+.. tip::
+
+   You can also use the ``@span`` decorator to cover a **function** or **method** and not interfere with the code.
+
+.. code-block:: python
+   :caption: Using the @span decorator
+
+   import asyncio
+   from asgi_monitor.tracing import span
+
+   @span(name="sleep", attributes={"duration": "1000ms"})
+   async def get_1000ms() -> dict:
+       await asyncio.sleep(1)
+       logger.error("sleep")
+       return {"message": "ok", "status": "success"}
+
+   @span  # name: get_100ms, attributes: {}
+   async def get_100ms() -> dict:
+       await asyncio.sleep(0.1)
+       logger.error("sleep")
+       return {"message": "ok", "status": "success"}
 
 Exporting
 ~~~~~~~~~~~~~~~~~~

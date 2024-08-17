@@ -122,6 +122,15 @@ This makes it possible to map the trace to the log and switch between them in yo
            # 2024-03-30 18:01:40.275193 [info] execution step one    [__main__] filename=example.py func_name=<module> module=example parent_span_id=6b15400b6764f747 pathname=/example.py process=16602 process_name=MainProcess service.name=fastapi span_id=a3586e6f36d675e1 thread=8385919680 thread_name=MainThread trace_id=d1dc4e05da452f29c56cf4f3c3963794
                                                                                                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                                             ^^^^^^^^^^^^^^^^^^^^ ^^^^^^^^^^^^^^^^^^^^^^^^                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. tip::
+
+   You can embed a processor in the **structlog** processor chain to export the trace context to the log.
+
+.. code-block:: python
+   :caption: Import processor for extract trace meta
+
+   from asgi_monitor.logging.trace_processor import extract_opentelemetry_trace_meta
+
 Uvicorn
 ~~~~~~~~~~~~~~~~~~
 
