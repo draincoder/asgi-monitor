@@ -67,9 +67,10 @@ async def test_tracing() -> None:
 
 async def test_metrics() -> None:
     # Arrange
+    expected_content_type = "text/plain; version=0.0.4; charset=utf-8"
     metrics_config = MetricsConfig(app_name="test", include_trace_exemplar=False)
     app = Litestar(middleware=[build_metrics_middleware(metrics_config)])
-    add_metrics_endpoint(app, metrics_config.registry)
+    add_metrics_endpoint(app, metrics_config.registry, openmetrics_format=False)
 
     # Act
     async with litestar_app(app) as client:
@@ -77,6 +78,7 @@ async def test_metrics() -> None:
 
         # Assert
         assert response.status_code == 200
+        assert response.headers["content-type"] == expected_content_type
         assert_that(response.content.decode()).contains(
             'litestar_app_info{app_name="test"} 1.0',
             'litestar_requests_total{app_name="test",method="GET",path="/metrics"} 1.0',
@@ -129,3 +131,28 @@ async def test_metrics_with_tracing() -> None:
             r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
         )
         assert_that(metrics.payload.decode()).matches(pattern)
+
+
+async def test_metrics_openmetrics_with_tracing() -> None:
+    # Arrange
+    expected_content_type = "application/openmetrics-text; version=1.0.0; charset=utf-8"
+    trace_config, _ = build_litestar_tracing_config()
+    metrics_config = MetricsConfig(app_name="test", include_trace_exemplar=True)
+    middlewares = [build_tracing_middleware(trace_config), build_metrics_middleware(metrics_config)]
+    app = Litestar([index], middleware=middlewares)
+    add_metrics_endpoint(app, metrics_config.registry, openmetrics_format=True)
+
+    # Act
+    async with litestar_app(app) as client:
+        response = client.get("/")
+        metrics = client.get("/metrics")
+
+        # Assert
+        assert response.status_code == 200
+        assert metrics.status_code == 200
+        assert metrics.headers["content-type"] == expected_content_type
+        pattern = (
+            r"litestar_request_duration_seconds_bucket\{"
+            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+        )
+        assert_that(metrics.content.decode()).matches(pattern)

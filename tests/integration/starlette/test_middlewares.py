@@ -135,8 +135,14 @@ async def test_tracing_partial_match() -> None:
 
 async def test_metrics() -> None:
     # Arrange
+    expected_content_type = "text/plain; version=0.0.4; charset=utf-8"
     app = Starlette()
-    metrics_config = MetricsConfig(app_name="test", include_metrics_endpoint=True, include_trace_exemplar=False)
+    metrics_config = MetricsConfig(
+        app_name="test",
+        include_metrics_endpoint=True,
+        include_trace_exemplar=False,
+        openmetrics_format=False,
+    )
     setup_metrics(app=app, config=metrics_config)
 
     # Act
@@ -145,6 +151,7 @@ async def test_metrics() -> None:
 
         # Assert
         assert response.status_code == 200
+        assert response.headers["content-type"] == expected_content_type
         assert_that(response.content.decode()).contains(
             'starlette_app_info{app_name="test"} 1.0',
             'starlette_requests_total{app_name="test",method="GET",path="/metrics"} 1.0',
@@ -201,3 +208,34 @@ async def test_metrics_with_tracing() -> None:
             r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
         )
         assert_that(metrics.payload.decode()).matches(pattern)
+
+
+async def test_metrics_openmetrics_with_tracing() -> None:
+    # Arrange
+    expected_content_type = "application/openmetrics-text; version=1.0.0; charset=utf-8"
+    trace_config, _ = build_starlette_tracing_config()
+    metrics_config = MetricsConfig(
+        app_name="test",
+        include_metrics_endpoint=True,
+        include_trace_exemplar=True,
+        openmetrics_format=True,
+    )
+    app = Starlette(routes=[Route("/", endpoint=index, methods=["GET"])])
+
+    setup_metrics(app=app, config=metrics_config)
+    setup_tracing(app=app, config=trace_config)
+
+    # Act
+    async with starlette_app(app) as client:
+        response = client.get("/")
+        metrics = client.get("/metrics")
+
+        # Assert
+        assert response.status_code == 200
+        assert metrics.status_code == 200
+        assert metrics.headers["content-type"] == expected_content_type
+        pattern = (
+            r"starlette_request_duration_seconds_bucket\{"
+            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+        )
+        assert_that(metrics.content.decode()).matches(pattern)

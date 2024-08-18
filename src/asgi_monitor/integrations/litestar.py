@@ -154,7 +154,8 @@ class MetricsMiddleware(AbstractMiddleware):
 @get(path="/metrics", summary="Get Prometheus metrics", include_in_schema=True)
 async def get_metrics(request: Request) -> Response:
     registry = request.app.state.metrics_registry
-    response = get_latest_metrics(registry, openmetrics_format=False)
+    openmetrics_format = request.app.state.openmetrics_format
+    response = get_latest_metrics(registry, openmetrics_format=openmetrics_format)
     return Response(
         content=response.payload,
         status_code=response.status_code,
@@ -195,14 +196,16 @@ def build_metrics_middleware(config: MetricsConfig) -> DefineMiddleware:
     )
 
 
-def add_metrics_endpoint(app: Litestar, registry: CollectorRegistry) -> None:
+def add_metrics_endpoint(app: Litestar, registry: CollectorRegistry, *, openmetrics_format: bool = False) -> None:
     """
     Add CollectorRegistry in state and register /metrics endpoint.
 
     :param Litestar app: The Litestar application instance.
     :param CollectorRegistry registry: The registry for the metrics.
+    :param bool openmetrics_format: A flag indicating whether to generate metrics in OpenMetrics format.
     :returns: None
     """
 
     app.state.metrics_registry = registry
+    app.state.openmetrics_format = openmetrics_format
     app.register(get_metrics)

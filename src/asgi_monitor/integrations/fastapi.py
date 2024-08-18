@@ -37,6 +37,9 @@ class MetricsConfig(BaseMetricsConfig):
     include_metrics_endpoint: bool = field(default=True)
     """Whether to include a /metrics endpoint."""
 
+    openmetrics_format: bool = field(default=False)
+    """A flag indicating whether to generate metrics in OpenMetrics format."""
+
 
 @dataclass(slots=True, frozen=True)
 class TracingConfig(BaseTracingConfig):
@@ -92,6 +95,7 @@ def setup_metrics(app: FastAPI, config: MetricsConfig) -> None:
     )
     if config.include_metrics_endpoint:
         app.state.metrics_registry = config.registry
+        app.state.openmetrics_format = config.openmetrics_format
         app.add_route(
             path="/metrics",
             route=get_metrics,

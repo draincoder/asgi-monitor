@@ -98,6 +98,9 @@ class MetricsConfig(BaseMetricsConfig):
     include_metrics_endpoint: bool = field(default=True)
     """Whether to include a /metrics endpoint."""
 
+    openmetrics_format: bool = field(default=False)
+    """A flag indicating whether to generate metrics in OpenMetrics format."""
+
 
 class TracingMiddleware:
     __slots__ = ("app", "open_telemetry_middleware")
@@ -179,7 +182,8 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 
 async def get_metrics(request: Request) -> Response:
     registry = request.app.state.metrics_registry
-    response = get_latest_metrics(registry, openmetrics_format=False)
+    openmetrics_format = request.app.state.openmetrics_format
+    response = get_latest_metrics(registry, openmetrics_format=openmetrics_format)
     return Response(
         content=response.payload,
         status_code=response.status_code,
@@ -220,6 +224,7 @@ def setup_metrics(app: Starlette, config: MetricsConfig) -> None:
     )
     if config.include_metrics_endpoint:
         app.state.metrics_registry = config.registry
+        app.state.openmetrics_format = config.openmetrics_format
         app.add_route(
             path="/metrics",
             route=get_metrics,
