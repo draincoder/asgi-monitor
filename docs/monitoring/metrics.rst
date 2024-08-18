@@ -50,6 +50,9 @@ The ``BaseMetricsConfig`` class is used to configure metrics, and it accepts the
 
 4. ``include_trace_exemplar`` (**bool**) - Whether to include trace exemplars in the metrics. Default is ``False``. This is only necessary if **tracing** is configured and metrics are collected in the ``OpenMetrics`` format.
 
+5. ``openmetrics_format`` (**bool**) - A flag indicating whether to generate metrics in ``OpenMetrics`` format. Default is ``False``.
+
+
 You can also set up a **global** ``prometheus_client.REGISTRY`` in ``MetricsConfig`` to support your **global** metrics,
 but it is better to use your own **non-global** registry or leave the **default** registry.
 
@@ -64,21 +67,22 @@ but it is better to use your own **non-global** registry or leave the **default*
        include_metrics_endpoint=True,  # Adding an endpoint /metrics
    )
    # Using default metrics_prefix "fastapi"
+   # Using default metrics export format (``openmetrics_format=True`` for use ``OpenMetrics`` format)
    # Using default registry
 
 Exporting
 ~~~~~~~~~~~~~~~~~~
 
-If you are using integration with the web framework, you can add metric exports via the config by setting ``include_metrics_endpoint`` to ``True`` or by explicitly calling ``add_metrics_endpoint``. In this case, the metrics will be exported via the **/metrics** endpoint in ``text/plain`` format.
+If you are using integration with the web framework, you can add metric exports via the config by setting ``include_metrics_endpoint`` to ``True`` or by explicitly calling ``add_metrics_endpoint``.
 
-In case you need to **customize the endpoint**, add **protection**, use the **OpenMetrics** format, or just use **another method for delivering** metrics, then you should use the built-in ``get_latest_metrics`` function.
+In case you need to **customize the endpoint**, add **protection** or just use **another method for delivering** metrics, then you should use the built-in ``get_latest_metrics`` function.
 
 .. code-block:: python
    :caption: Exporting metrics
 
    from asgi_monitor.metrics import get_latest_metrics
 
-   metrics = get_latest_metrics(registry=registry, openmetrics_format=True)
+   metrics = get_latest_metrics(registry=registry)
 
 Gunicorn
 ~~~~~~~~~~~~~~~~~~

@@ -46,7 +46,7 @@ def create_app() -> Litestar:
 
     app = Litestar([index], middleware=middlewares, logging_config=None)
 
-    add_metrics_endpoint(app, metrics_config.registry)
+    add_metrics_endpoint(app, metrics_config.registry, openmetrics_format=False)
 
     return app
 

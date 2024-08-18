@@ -126,8 +126,7 @@ So **asgi-monitor** is rushing to the rescue.
        middlewares = [build_tracing_middleware(trace_config), build_metrics_middleware(metrics_config)]
 
        app = Litestar([index], middleware=middlewares, logging_config=None)
-
-       add_metrics_endpoint(app, metrics_config.registry)
+       add_metrics_endpoint(app, metrics_config.registry, openmetrics_format=False)
 
        return app
 
