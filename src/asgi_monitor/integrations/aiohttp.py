@@ -20,7 +20,14 @@ from asgi_monitor.metrics import get_latest_metrics
 from asgi_monitor.metrics.config import BaseMetricsConfig
 from asgi_monitor.metrics.manager import MetricsManager, build_metrics_manager
 
-__all__ = ("MetricsConfig", "build_metrics_middleware", "get_metrics", "setup_metrics")
+__all__ = (
+    "MetricsConfig",
+    "build_metrics_middleware",
+    "get_metrics",
+    "setup_metrics",
+    "TracingConfig",
+    "setup_tracing",
+)
 
 from asgi_monitor.tracing import BaseTracingConfig
 
@@ -120,7 +127,7 @@ def set_status_code(span: trace.Span, status_code: int) -> None:
 class MetricsConfig(BaseMetricsConfig):
     """Configuration class for the Metrics middleware."""
 
-    metrics_prefix: str = "starlette"
+    metrics_prefix: str = "aiohttp"
     """The prefix to use for the metrics."""
 
     include_metrics_endpoint: bool = field(default=True)
@@ -171,7 +178,7 @@ def build_metrics_middleware(
             raise
         else:
             after_time = time.perf_counter()
-            status_code = response._status  # noqa: SLF001
+            status_code = response.status
             exemplar: dict[str, str] | None = None
 
             if include_trace_exemplar:
