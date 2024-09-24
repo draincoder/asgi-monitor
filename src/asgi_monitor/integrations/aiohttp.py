@@ -29,7 +29,6 @@ __all__ = (
     "setup_tracing",
 )
 
-from asgi_monitor.tracing import BaseTracingConfig
 
 OTEL_SCHEMA = "https://opentelemetry.io/schemas/1.11.0"
 
@@ -138,7 +137,7 @@ class MetricsConfig(BaseMetricsConfig):
 
 
 @dataclass(slots=True, frozen=True)
-class TracingConfig(BaseTracingConfig):
+class TracingConfig:
     """
     Configuration class for the OpenTelemetry middleware.
     Consult the OpenTelemetry ASGI documentation for more info about the configuration options.
@@ -152,6 +151,12 @@ class TracingConfig(BaseTracingConfig):
     """
     scope_span_details_extractor: Callable[[Request], tuple[str, dict[str, Any]]] = _get_default_span_details
 
+    meter_provider: MeterProvider | None = field(default=None)
+    """Optional meter provider to use."""
+
+    tracer_provider: TracerProvider | None = field(default=None)
+    """Optional tracer provider to use."""
+
 
 def build_metrics_middleware(
     metrics_manager: MetricsManager,
@@ -160,7 +165,8 @@ def build_metrics_middleware(
 ) -> Callable[..., Coroutine]:
     @middleware
     async def metrics_middleware(request: Request, handler: Callable) -> Any:
-        status_code = HTTPInternalServerError
+        status_code = HTTPInternalServerError().status_code
+
         method = request.method
         path = request.url.path
 
@@ -194,7 +200,7 @@ def build_metrics_middleware(
                 exemplar=exemplar,
             )
         finally:
-            metrics_manager.inc_responses_count(method=method, path=path, status_code=status_code)  # type: ignore[arg-type]
+            metrics_manager.inc_responses_count(method=method, path=path, status_code=status_code)
             metrics_manager.remove_request_in_progress(method=method, path=path)
 
         return response
