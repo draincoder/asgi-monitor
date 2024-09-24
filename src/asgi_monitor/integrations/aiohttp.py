@@ -103,7 +103,7 @@ def _parse_active_request_count_attrs(req_attrs: dict[str, Any]) -> dict[str, An
     return active_requests_count_attrs
 
 
-def get_default_span_details(request: Request) -> tuple[str, dict]:
+def _get_default_span_details(request: Request) -> tuple[str, dict]:
     span_name = request.path.strip() or f"HTTP {request.method}"
     return span_name, {}
 
@@ -150,6 +150,7 @@ class TracingConfig(BaseTracingConfig):
     Key to use when checking whether a list of excluded urls is passed via ENV.
     OpenTelemetry supports excluding urls by passing an env in the format '{exclude_urls_env_key}_EXCLUDED_URLS'.
     """
+    scope_span_details_extractor: Callable[[Request], tuple[str, dict[str, Any]]] = _get_default_span_details
 
 
 def build_metrics_middleware(
@@ -201,7 +202,7 @@ def build_metrics_middleware(
     return metrics_middleware
 
 
-def build_tracing_middleware(app: Application, config: TracingConfig) -> Callable[..., Coroutine]:
+def build_tracing_middleware(config: TracingConfig) -> Callable[..., Coroutine]:
     tracer = _get_tracer(config.tracer_provider)
     meter = get_meter(
         name="AIOHTTP",
@@ -222,7 +223,7 @@ def build_tracing_middleware(app: Application, config: TracingConfig) -> Callabl
 
     @middleware
     async def tracing_middleware(request: Request, handler: Callable) -> Any:
-        span_name, additional_attributes = get_default_span_details(request)
+        span_name, additional_attributes = config.scope_span_details_extractor(request)
 
         req_attrs = collect_request_attributes(request)
         duration_attrs = _parse_duration_attrs(req_attrs)
@@ -280,4 +281,4 @@ def setup_metrics(app: Application, config: MetricsConfig) -> None:
 
 
 def setup_tracing(app: Application, config: TracingConfig) -> None:
-    app._middlewares.append(build_tracing_middleware(app, config))  # noqa: SLF001
+    app._middlewares.append(build_tracing_middleware(config))  # noqa: SLF001

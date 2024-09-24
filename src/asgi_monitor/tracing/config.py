@@ -26,7 +26,7 @@ class BaseTracingConfig:
     OpenTelemetry supports excluding urls by passing an env in the format '{exclude_urls_env_key}_EXCLUDED_URLS'.
     """
 
-    scope_span_details_extractor: Callable[[Any], tuple[str, dict[str, Any]]] | None = field(default=None)
+    scope_span_details_extractor: Callable[[Any], tuple[str, dict[str, Any]]]
     """
     Callback which should return a string and a tuple, representing the desired default span name and a dictionary
     with any additional span attributes to set.
