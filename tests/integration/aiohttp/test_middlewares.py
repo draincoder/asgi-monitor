@@ -1,6 +1,6 @@
 import asyncio
 import json
-from typing import Callable
+from typing import Callable, cast
 
 from aiohttp.test_utils import TestClient  # noqa: TCH002
 from aiohttp.web import Application, Request, Response, json_response
@@ -115,7 +115,7 @@ async def test_metrics_with_tracing(aiohttp_client: Callable) -> None:
     app = Application()
     app.router.add_get("/", index_handler)
 
-    trace_cfg, _ = build_aiohttp_tracing_config()
+    trace_cfg, exporter = build_aiohttp_tracing_config()
     metrics_cfg = MetricsConfig(
         app_name="test",
         include_metrics_endpoint=False,
@@ -131,6 +131,7 @@ async def test_metrics_with_tracing(aiohttp_client: Callable) -> None:
     # Assert
     assert response.status == 200
     metrics = get_latest_metrics(metrics_cfg.registry, openmetrics_format=True)
+    span = exporter.get_finished_spans()[0]
     pattern = (
         r"aiohttp_request_duration_seconds_bucket\{"
         r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
@@ -249,7 +250,6 @@ async def test_json_response_handle(aiohttp_client: Callable) -> None:
 async def test_error_handle_with_tracing(aiohttp_client: Callable) -> None:
     # Arrange
     app = Application()
-
     app.router.add_get("/error", zero_division_handler)
 
     trace_cfg, exporter = build_aiohttp_tracing_config()
@@ -278,7 +278,6 @@ async def test_error_handle_with_tracing(aiohttp_client: Callable) -> None:
 async def test_raise_handler_with_tracing(aiohttp_client: Callable) -> None:
     # Arrange
     app = Application()
-
     app.router.add_get("/raise_handler", raise_handler)
 
     trace_cfg, exporter = build_aiohttp_tracing_config()
@@ -300,3 +299,26 @@ async def test_raise_handler_with_tracing(aiohttp_client: Callable) -> None:
         },
         ignore=["exception.stacktrace"],
     )
+
+
+async def test_tracing(aiohttp_client: Callable) -> None:
+    # Arrange
+    app = Application()
+    app.router.add_get("/", index_handler)
+
+    trace_cfg, exporter = build_aiohttp_tracing_config()
+
+    setup_tracing(app, trace_cfg)
+
+    client: TestClient = await aiohttp_client(app)
+    # Act
+    response = await client.get("/")
+    span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
+    assert_that(span[0].attributes).is_equal_to({
+            'http.host': '0.0.0.0',
+            'net.host.port': 80,
+            'http.url': 'http://0.0.0.0',
+            'http.status_code': 200
+        }
+    )
+    assert response.status == 200
