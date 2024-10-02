@@ -5,9 +5,7 @@ from typing import Any, Callable, Coroutine
 
 from aiohttp.web import Application, Request, Response, middleware
 from aiohttp.web_exceptions import HTTPException, HTTPInternalServerError
-from multidict import CIMultiDictProxy  # noqa: TCH002
 from opentelemetry import trace
-from opentelemetry.instrumentation.asgi import collect_request_attributes
 from opentelemetry.instrumentation.utils import http_status_to_status_code
 from opentelemetry.metrics import Meter, MeterProvider, get_meter_provider
 from opentelemetry.propagate import extract
@@ -32,75 +30,39 @@ __all__ = (
 _OTEL_SCHEMA = "https://opentelemetry.io/schemas/1.11.0"
 
 
-_DURATION_ATTRS = [
-    SpanAttributes.HTTP_METHOD,
-    SpanAttributes.HTTP_HOST,
-    SpanAttributes.HTTP_SCHEME,
-    SpanAttributes.HTTP_STATUS_CODE,
-    SpanAttributes.HTTP_FLAVOR,
-    SpanAttributes.HTTP_SERVER_NAME,
-    SpanAttributes.NET_HOST_NAME,
-    SpanAttributes.NET_HOST_PORT,
-    SpanAttributes.HTTP_ROUTE,
-]
-
-_ACTIVE_REQUESTS_COUNT_ATTRS = [
-    SpanAttributes.HTTP_METHOD,
-    SpanAttributes.HTTP_HOST,
-    SpanAttributes.HTTP_SCHEME,
-    SpanAttributes.HTTP_FLAVOR,
-    SpanAttributes.HTTP_SERVER_NAME,
-]
-
-
 class AiohttpGetter(Getter):
-    def get(self, carrier: dict, key: str) -> list | None:
-        headers: CIMultiDictProxy = carrier.headers  # type: ignore[attr-defined]
-        if not headers:
-            return None
-        return headers.getall(key, None)
+    def get(self, carrier: Request, key: str) -> list[str] | None:
+        headers = carrier.headers
+        return headers.getall(key, None) if headers else None
 
-    def keys(self, carrier: dict) -> list:
+    def keys(self, carrier: Request) -> list[str]:
         return list(carrier.keys())
 
 
-def _get_tracer(tracer_provider: TracerProvider | None = None) -> Tracer:
-    return trace.get_tracer(
-        __name__,
-        tracer_provider=tracer_provider,
-        schema_url=_OTEL_SCHEMA,
-    )
+def _get_default_span_details(request: Request) -> tuple[str, dict[str, Any]]:
+    span_attributes: dict[str, Any] = {
+        SpanAttributes.HTTP_SCHEME: request.scheme,
+        SpanAttributes.HTTP_HOST: request.host,
+        SpanAttributes.NET_HOST_PORT: request.url.port,
+        SpanAttributes.HTTP_FLAVOR: f"{request.version.major}.{request.version.minor}",
+        SpanAttributes.HTTP_TARGET: request.path_qs,
+        SpanAttributes.HTTP_URL: str(request.url),
+        SpanAttributes.HTTP_METHOD: request.method,
+        SpanAttributes.HTTP_SERVER_NAME: request.headers.get("Host", ""),
+        SpanAttributes.HTTP_USER_AGENT: request.headers.get("User-Agent", ""),
+        SpanAttributes.NET_PEER_IP: request.remote,
+    }
 
+    if request.transport:
+        span_attributes[SpanAttributes.NET_PEER_PORT] = request.transport.get_extra_info("peername")[1]
+    if request.match_info.route and request.match_info.route.resource:
+        route = request.match_info.route.resource.canonical
+        span_attributes[SpanAttributes.HTTP_ROUTE] = route
+    else:
+        route = request.path
+        span_attributes[SpanAttributes.HTTP_ROUTE] = route
 
-def _get_meter(
-    name: str,
-    meter_provider: MeterProvider | None = None,
-    schema_url: str | None = None,
-) -> Meter:
-    if meter_provider is None:
-        meter_provider = get_meter_provider()
-    return meter_provider.get_meter(name=name, schema_url=schema_url)
-
-
-def _parse_duration_attrs(req_attrs: dict[str, Any]) -> dict[str, Any]:
-    duration_attrs = {}
-    for attr_key in _DURATION_ATTRS:
-        if req_attrs.get(attr_key) is not None:
-            duration_attrs[attr_key] = req_attrs[attr_key]
-    return duration_attrs
-
-
-def _parse_active_request_count_attrs(req_attrs: dict[str, Any]) -> dict[str, Any]:
-    active_requests_count_attrs = {}
-    for attr_key in _ACTIVE_REQUESTS_COUNT_ATTRS:
-        if req_attrs.get(attr_key) is not None:
-            active_requests_count_attrs[attr_key] = req_attrs[attr_key]
-    return active_requests_count_attrs
-
-
-def _get_default_span_details(request: Request) -> tuple[str, dict]:
-    span_name = request.path.strip() or f"HTTP {request.method}"
-    return span_name, {}
+    return f"{request.method} {route or 'unknown'}", span_attributes
 
 
 def _set_status_code(span: trace.Span, status_code: int) -> None:
@@ -216,19 +178,21 @@ def build_tracing_middleware(config: TracingConfig) -> Callable[..., Coroutine]:
 
     @middleware
     async def tracing_middleware(request: Request, handler: Callable) -> Any:
-        span_name, additional_attributes = config.scope_span_details_extractor(request)
-
-        req_attrs = collect_request_attributes(request)
-        duration_attrs = _parse_duration_attrs(req_attrs)
-        active_requests_count_attrs = _parse_active_request_count_attrs(req_attrs)
+        span_name, attributes = config.scope_span_details_extractor(request)
+        active_requests_count_attrs = {
+            SpanAttributes.HTTP_SERVER_NAME: attributes[SpanAttributes.HTTP_SERVER_NAME],
+            SpanAttributes.HTTP_SCHEME: attributes[SpanAttributes.HTTP_SCHEME],
+            SpanAttributes.HTTP_HOST: attributes[SpanAttributes.HTTP_HOST],
+            SpanAttributes.HTTP_FLAVOR: attributes[SpanAttributes.HTTP_FLAVOR],
+            SpanAttributes.HTTP_METHOD: attributes[SpanAttributes.HTTP_METHOD],
+        }
+        duration_attrs = {SpanAttributes.HTTP_ROUTE: attributes[SpanAttributes.HTTP_ROUTE]}
 
         with tracer.start_as_current_span(
             span_name,
             context=extract(request, getter=getter),
             kind=trace.SpanKind.SERVER,
         ) as span:
-            attributes = collect_request_attributes(request)
-            attributes.update(additional_attributes)
             span.set_attributes(attributes)
             start = default_timer()
             active_requests_counter.add(1, active_requests_count_attrs)
@@ -275,3 +239,21 @@ def setup_metrics(app: Application, config: MetricsConfig) -> None:
 
 def setup_tracing(app: Application, config: TracingConfig) -> None:
     app.middlewares.append(build_tracing_middleware(config))
+
+
+def _get_tracer(tracer_provider: TracerProvider | None = None) -> Tracer:
+    return trace.get_tracer(
+        __name__,
+        tracer_provider=tracer_provider,
+        schema_url=_OTEL_SCHEMA,
+    )
+
+
+def _get_meter(
+    name: str,
+    meter_provider: MeterProvider | None = None,
+    schema_url: str | None = None,
+) -> Meter:
+    if meter_provider is None:
+        meter_provider = get_meter_provider()
+    return meter_provider.get_meter(name=name, schema_url=schema_url)

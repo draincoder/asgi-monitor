@@ -1,12 +1,13 @@
 import asyncio
 import json
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aiohttp.pytest_plugin import AiohttpClient
 from aiohttp.test_utils import TestClient  # noqa: TCH002
 from aiohttp.web import Application, Request, Response, json_response
 from aiohttp.web_exceptions import HTTPInternalServerError
 from assertpy import assert_that
+from opentelemetry.propagate import inject
 from prometheus_client import REGISTRY
 
 if TYPE_CHECKING:
@@ -50,8 +51,10 @@ async def test_metrics(aiohttp_client: AiohttpClient) -> None:
     setup_metrics(app, metrics_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/metrics")
+
     # Assert
     assert response.headers["content-type"] == expected_content_type
     assert response.status == 200
@@ -77,8 +80,10 @@ async def test_metrics_global_registry(aiohttp_client: AiohttpClient) -> None:
     setup_metrics(app, metrics_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/metrics")
+
     # Assert
     assert response.status == 200
     assert_that(await response.text()).contains(
@@ -102,8 +107,10 @@ async def test_metrics_get_path(aiohttp_client: AiohttpClient) -> None:
     setup_metrics(app, metrics_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/metrics")
+
     # Assert
     assert response.status == 200
     assert_that(await response.text()).contains(
@@ -116,6 +123,17 @@ async def test_metrics_get_path(aiohttp_client: AiohttpClient) -> None:
 
 async def test_metrics_with_tracing(aiohttp_client: AiohttpClient) -> None:
     # Arrange
+    expected = {
+        "http.scheme": "http",
+        "http.flavor": "1.1",
+        "http.target": "/",
+        "http.method": "GET",
+        "http.user_agent": "Python/3.10 aiohttp/3.10.5",
+        "net.peer.ip": "127.0.0.1",
+        "http.route": "/",
+        "http.status_code": 200,
+    }
+
     app = Application()
     app.router.add_get("/", index_handler)
 
@@ -130,20 +148,28 @@ async def test_metrics_with_tracing(aiohttp_client: AiohttpClient) -> None:
     setup_tracing(app, trace_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/")
+
     # Assert
     assert response.status == 200
+
+    spans = cast("tuple[Span]", exporter.get_finished_spans())
+    attrs = cast(dict[str, Any], spans[0].attributes)
+    assert spans[0].name == "GET /"
+
+    for k, v in expected.items():
+        assert attrs[k] == v
+
+    assert attrs["http.host"].startswith("127.0.0.1:")
+    assert isinstance(attrs["net.host.port"], int)
+    assert attrs["http.url"].startswith("http://127.0.0.1:")
+    assert attrs["http.server_name"].startswith("127.0.0.1:")
+    assert isinstance(attrs["net.peer.port"], int)
+    assert response.status == 200
+
     metrics = get_latest_metrics(metrics_cfg.registry, openmetrics_format=True)
-    span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
-    assert_that(span[0].attributes).is_equal_to(
-        {
-            "http.host": "0.0.0.0",  # noqa: S104
-            "net.host.port": 80,
-            "http.url": "http://0.0.0.0",
-            "http.status_code": 200,
-        }
-    )
     pattern = (
         r"aiohttp_request_duration_seconds_bucket\{"
         r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
@@ -171,9 +197,11 @@ async def test_metrics_openmetrics_with_tracing(aiohttp_client: AiohttpClient) -
     setup_tracing(app, trace_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/")
     metrics = await client.get("/metrics")
+
     # Assert
     assert response.status == 200
     assert metrics.status == 200
@@ -200,15 +228,16 @@ async def test_error_metrics(aiohttp_client: AiohttpClient) -> None:
         include_trace_exemplar=False,
         openmetrics_format=False,
     )
-
     setup_metrics(app, metrics_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     try:
         exc = await client.get("/error")
     except ZeroDivisionError:
         response = await client.get("/metrics")
+
         # Assert
         assert response.headers["content-type"] == expected_content_type
         assert response.status == 200
@@ -244,9 +273,11 @@ async def test_json_response_handle(aiohttp_client: AiohttpClient) -> None:
     setup_metrics(app, metrics_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     json_response_ = await client.get("/json_response")
     response = await client.get("/metrics")
+
     # Assert
     assert response.status == 200
     assert json_response_.status == 200
@@ -275,14 +306,20 @@ async def test_error_handle_with_tracing(aiohttp_client: AiohttpClient) -> None:
     setup_tracing(app, trace_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/error")
+
     # Assert
     span = exporter.get_finished_spans()[0]
     assert response.status == 500
 
     assert_that(span.events[0]._attributes).is_equal_to(
-        {"exception.type": "ZeroDivisionError", "exception.message": "division by zero", "exception.escaped": "False"},
+        {
+            "exception.type": "ZeroDivisionError",
+            "exception.message": "division by zero",
+            "exception.escaped": "False",
+        },
         ignore=["exception.stacktrace"],
     )
 
@@ -291,18 +328,17 @@ async def test_raise_handler_with_tracing(aiohttp_client: AiohttpClient) -> None
     # Arrange
     app = Application()
     app.router.add_get("/raise_handler", raise_handler)
-
     trace_cfg, exporter = build_aiohttp_tracing_config()
-
     setup_tracing(app, trace_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/raise_handler")
+
     # Assert
     span = exporter.get_finished_spans()[0]
     assert response.status == 500
-
     assert_that(span.events[0]._attributes).is_equal_to(
         {
             "exception.type": "aiohttp.web_exceptions.HTTPInternalServerError",
@@ -315,24 +351,99 @@ async def test_raise_handler_with_tracing(aiohttp_client: AiohttpClient) -> None
 
 async def test_tracing(aiohttp_client: AiohttpClient) -> None:
     # Arrange
-    app = Application()
-    app.router.add_get("/", index_handler)
+    expected = {
+        "http.scheme": "http",
+        "http.flavor": "1.1",
+        "http.target": "/",
+        "http.method": "GET",
+        "http.user_agent": "Python/3.10 aiohttp/3.10.5",
+        "net.peer.ip": "127.0.0.1",
+        "http.route": "/",
+        "http.status_code": 200,
+    }
 
     trace_cfg, exporter = build_aiohttp_tracing_config()
-
+    app = Application()
+    app.router.add_get("/", index_handler)
     setup_tracing(app, trace_cfg)
 
     client: TestClient = await aiohttp_client(app)
+
     # Act
     response = await client.get("/")
+
     # Assert
-    span = cast("tuple[Span, Span, Span]", exporter.get_finished_spans())
-    assert_that(span[0].attributes).is_equal_to(
-        {
-            "http.host": "0.0.0.0",  # noqa: S104
-            "net.host.port": 80,
-            "http.url": "http://0.0.0.0",
-            "http.status_code": 200,
-        }
-    )
+    spans = cast("tuple[Span]", exporter.get_finished_spans())
+    attrs = cast(dict[str, Any], spans[0].attributes)
+    assert spans[0].name == "GET /"
+
+    for k, v in expected.items():
+        assert attrs[k] == v
+
+    assert attrs["http.host"].startswith("127.0.0.1:")
+    assert isinstance(attrs["net.host.port"], int)
+    assert attrs["http.url"].startswith("http://127.0.0.1:")
+    assert attrs["http.server_name"].startswith("127.0.0.1:")
+    assert isinstance(attrs["net.peer.port"], int)
     assert response.status == 200
+
+
+async def test_tracing_context(aiohttp_client: AiohttpClient) -> None:
+    # Arrange
+    trace_cfg, exporter = build_aiohttp_tracing_config()
+    tracer = trace_cfg.tracer_provider.get_tracer(__name__)  # type: ignore[union-attr]
+    app = Application()
+    app.router.add_get("/", index_handler)
+    setup_tracing(app, trace_cfg)
+
+    with tracer.start_as_current_span("start"):
+        headers: dict[str, str] = {}
+        inject(headers)
+
+    client: TestClient = await aiohttp_client(app)
+
+    # Act
+    response = await client.get("/", headers=headers)
+
+    # Assert
+    spans = cast("tuple[Span, Span]", exporter.get_finished_spans())
+    assert spans[0].context.span_id == spans[1].parent.span_id  # type: ignore[union-attr]
+    assert response.status == 200
+
+
+async def test_not_found_tracing(aiohttp_client: AiohttpClient) -> None:
+    # Arrange
+    expected = {
+        "http.scheme": "http",
+        "http.flavor": "1.1",
+        "http.target": "/",
+        "http.method": "GET",
+        "http.user_agent": "Python/3.10 aiohttp/3.10.5",
+        "net.peer.ip": "127.0.0.1",
+        "http.route": "/",
+        "http.status_code": 404,
+    }
+
+    trace_cfg, exporter = build_aiohttp_tracing_config()
+    app = Application()
+    setup_tracing(app, trace_cfg)
+
+    client: TestClient = await aiohttp_client(app)
+
+    # Act
+    response = await client.get("/")
+
+    # Assert
+    spans = cast("tuple[Span]", exporter.get_finished_spans())
+    attrs = cast(dict[str, Any], spans[0].attributes)
+    assert spans[0].name == "GET /"
+
+    for k, v in expected.items():
+        assert attrs[k] == v
+
+    assert attrs["http.host"].startswith("127.0.0.1:")
+    assert isinstance(attrs["net.host.port"], int)
+    assert attrs["http.url"].startswith("http://127.0.0.1:")
+    assert attrs["http.server_name"].startswith("127.0.0.1:")
+    assert isinstance(attrs["net.peer.port"], int)
+    assert response.status == 404
