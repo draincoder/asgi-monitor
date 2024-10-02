@@ -21,7 +21,7 @@ async def index(requests: Request) -> Response:
 
 
 def create_app() -> Application:
-    configure_logging(json_format=True, include_trace=False)
+    configure_logging(json_format=False, include_trace=True)
 
     app = Application()
     app.router.add_get("/", index)
