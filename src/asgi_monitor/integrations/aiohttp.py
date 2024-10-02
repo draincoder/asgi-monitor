@@ -217,7 +217,6 @@ def build_tracing_middleware(config: TracingConfig) -> Callable[..., Coroutine]:
     @middleware
     async def tracing_middleware(request: Request, handler: Callable) -> Any:
         span_name, additional_attributes = config.scope_span_details_extractor(request)
-
         req_attrs = collect_request_attributes(request)
         duration_attrs = _parse_duration_attrs(req_attrs)
         active_requests_count_attrs = _parse_active_request_count_attrs(req_attrs)
