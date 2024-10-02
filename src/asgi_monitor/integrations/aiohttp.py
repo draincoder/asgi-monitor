@@ -199,8 +199,8 @@ def build_tracing_middleware(config: TracingConfig) -> Callable[..., Coroutine]:
             try:
                 resp = await handler(request)
                 _set_status_code(span, resp.status)
-            except HTTPException as ex:
-                _set_status_code(span, ex.status_code)
+            except HTTPException as exc:
+                _set_status_code(span, exc.status_code)
                 raise
             finally:
                 duration = max((default_timer() - start) * 1000, 0)
