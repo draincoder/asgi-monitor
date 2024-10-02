@@ -28,7 +28,7 @@ def create_app() -> Application:
 
     resource = Resource.create(
         attributes={
-            "service.name": "fastapi",
+            "service.name": "aiohttp",
         },
     )
     tracer_provider = TracerProvider(resource=resource)
