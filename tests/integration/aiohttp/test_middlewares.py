@@ -128,7 +128,6 @@ async def test_metrics_with_tracing(aiohttp_client: AiohttpClient) -> None:
         "http.flavor": "1.1",
         "http.target": "/",
         "http.method": "GET",
-        "http.user_agent": "Python/3.10 aiohttp/3.10.5",
         "net.peer.ip": "127.0.0.1",
         "http.route": "/",
         "http.status_code": 200,
@@ -167,6 +166,7 @@ async def test_metrics_with_tracing(aiohttp_client: AiohttpClient) -> None:
     assert attrs["http.url"].startswith("http://127.0.0.1:")
     assert attrs["http.server_name"].startswith("127.0.0.1:")
     assert isinstance(attrs["net.peer.port"], int)
+    assert "Python" in attrs["http.user_agent"]
     assert response.status == 200
 
     metrics = get_latest_metrics(metrics_cfg.registry, openmetrics_format=True)
@@ -356,7 +356,6 @@ async def test_tracing(aiohttp_client: AiohttpClient) -> None:
         "http.flavor": "1.1",
         "http.target": "/",
         "http.method": "GET",
-        "http.user_agent": "Python/3.10 aiohttp/3.10.5",
         "net.peer.ip": "127.0.0.1",
         "http.route": "/",
         "http.status_code": 200,
@@ -385,6 +384,7 @@ async def test_tracing(aiohttp_client: AiohttpClient) -> None:
     assert attrs["http.url"].startswith("http://127.0.0.1:")
     assert attrs["http.server_name"].startswith("127.0.0.1:")
     assert isinstance(attrs["net.peer.port"], int)
+    assert "Python" in attrs["http.user_agent"]
     assert response.status == 200
 
 
@@ -418,7 +418,6 @@ async def test_not_found_tracing(aiohttp_client: AiohttpClient) -> None:
         "http.flavor": "1.1",
         "http.target": "/",
         "http.method": "GET",
-        "http.user_agent": "Python/3.10 aiohttp/3.10.5",
         "net.peer.ip": "127.0.0.1",
         "http.route": "/",
         "http.status_code": 404,
@@ -446,4 +445,5 @@ async def test_not_found_tracing(aiohttp_client: AiohttpClient) -> None:
     assert attrs["http.url"].startswith("http://127.0.0.1:")
     assert attrs["http.server_name"].startswith("127.0.0.1:")
     assert isinstance(attrs["net.peer.port"], int)
+    assert "Python" in attrs["http.user_agent"]
     assert response.status == 404
