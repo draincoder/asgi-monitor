@@ -35,7 +35,7 @@ def create_app() -> Application:
     trace.set_tracer_provider(tracer_provider)
 
     trace_config = TracingConfig(tracer_provider=tracer_provider)
-    metrics_config = MetricsConfig(app_name="fastapi", include_trace_exemplar=True)
+    metrics_config = MetricsConfig(app_name="aiohttp", include_trace_exemplar=True)
 
     setup_metrics(app=app, config=metrics_config)
     setup_tracing(app=app, config=trace_config)
