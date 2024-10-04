@@ -66,6 +66,40 @@ async def test_metrics(aiohttp_client: AiohttpClient) -> None:
     )
 
 
+async def test_not_handled(aiohttp_client: AiohttpClient) -> None:
+    # Arrange
+    expected_content_type = "text/plain; version=0.0.4; charset=utf-8"
+
+    app = Application()
+
+    metrics_cfg = MetricsConfig(
+        app_name="test",
+        include_metrics_endpoint=True,
+        include_trace_exemplar=False,
+        openmetrics_format=False,
+    )
+
+    setup_metrics(app, metrics_cfg)
+
+    client: TestClient = await aiohttp_client(app)
+
+    # Act
+    not_found_response = await client.get("/not_found")
+    response = await client.get("/metrics")
+
+    # Assert
+    assert response.headers["content-type"] == expected_content_type
+    assert not_found_response.status == 404
+    assert response.status == 200
+    assert_that(await response.text()).does_not_contain("not_found")
+    assert_that(await response.text()).contains(
+        'aiohttp_app_info{app_name="test"} 1.0',
+        'aiohttp_requests_total{app_name="test",method="GET",path="/metrics"} 1.0',
+        'aiohttp_requests_created{app_name="test",method="GET",path="/metrics"}',
+        'aiohttp_requests_in_progress{app_name="test",method="GET",path="/metrics"} 1.0',
+    )
+
+
 async def test_metrics_global_registry(aiohttp_client: AiohttpClient) -> None:
     # Arrange
     app = Application()

@@ -5,6 +5,7 @@ from typing import Any, Callable, Coroutine
 
 from aiohttp.web import Application, Request, Response, middleware
 from aiohttp.web_exceptions import HTTPException, HTTPInternalServerError
+from aiohttp.web_urldispatcher import MatchInfoError
 from opentelemetry import trace
 from opentelemetry.instrumentation.utils import http_status_to_status_code
 from opentelemetry.metrics import Meter, MeterProvider, get_meter_provider
@@ -113,6 +114,9 @@ def build_metrics_middleware(
 ) -> Callable[..., Coroutine]:
     @middleware
     async def metrics_middleware(request: Request, handler: Callable) -> Any:
+        if isinstance(await request.app.router.resolve(request), MatchInfoError):
+            return await handler(request)
+
         status_code = HTTPInternalServerError.status_code
 
         method = request.method
