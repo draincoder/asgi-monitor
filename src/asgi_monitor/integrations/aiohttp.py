@@ -113,7 +113,7 @@ def build_metrics_middleware(
 ) -> Callable[..., Coroutine]:
     @middleware
     async def metrics_middleware(request: Request, handler: Callable) -> Any:
-        status_code = HTTPInternalServerError().status_code
+        status_code = HTTPInternalServerError.status_code
 
         method = request.method
         path = request.url.path
@@ -193,6 +193,7 @@ def build_tracing_middleware(config: TracingConfig) -> Callable[..., Coroutine]:
             context=extract(request, getter=getter),
             kind=trace.SpanKind.SERVER,
         ) as span:
+            request.span = span
             span.set_attributes(attributes)
             start = default_timer()
             active_requests_counter.add(1, active_requests_count_attrs)

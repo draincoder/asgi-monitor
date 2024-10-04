@@ -9,6 +9,7 @@ from opentelemetry.sdk.trace import TracerProvider
 
 from asgi_monitor.integrations.aiohttp import MetricsConfig, TracingConfig, setup_metrics, setup_tracing
 from asgi_monitor.logging import configure_logging
+from asgi_monitor.logging.aiohttp import TraceAccessLogger
 
 logger = logging.getLogger(__name__)
 
@@ -35,14 +36,14 @@ def create_app() -> Application:
     trace.set_tracer_provider(tracer_provider)
 
     trace_config = TracingConfig(tracer_provider=tracer_provider)
-    metrics_config = MetricsConfig(app_name="aiohttp", include_trace_exemplar=True)
+    metrics_config = MetricsConfig(app_name="aiohttp")
 
-    setup_metrics(app=app, config=metrics_config)
     setup_tracing(app=app, config=trace_config)
+    setup_metrics(app=app, config=metrics_config)
 
     return app
 
 
 if __name__ == "__main__":
     app = create_app()
-    run_app(app=app, host="127.0.0.1", port=8000)
+    run_app(app=app, host="127.0.0.1", port=8000, access_log_class=TraceAccessLogger, access_log=logger)

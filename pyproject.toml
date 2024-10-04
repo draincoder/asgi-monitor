@@ -93,6 +93,7 @@ lint.ignore = [
     "ISC001",
     "UP035",
     "COM812",
+    "G002"
 ]
 
 [tool.ruff.lint.per-file-ignores]
