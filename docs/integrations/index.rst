@@ -1,6 +1,7 @@
 .. _FastAPI: https://fastapi.tiangolo.com
 .. _Starlette: https://www.starlette.io
 .. _Litestar: https://litestar.dev
+.. _Aiohttp: https://docs.aiohttp.org/en/stable/web.html
 .. _real_world: https://github.com/draincoder/asgi-monitor/tree/master/examples/real_world
 
 .. _integrations:
@@ -13,6 +14,7 @@ Integration with the following frameworks is **now** implemented:
 * FastAPI_
 * Starlette_
 * Litestar_
+* Aiohttp_
 
 But other integrations are planned in the near future, and you can also implement your own through **PR**.
 
@@ -36,8 +38,7 @@ These frameworks have the **same** integration api, so here I will show you how 
    import uvicorn
 
 
-
-   def create_app() -> None:
+   def create_app() -> FastAPI:
        configure_logging(level=logging.INFO, json_format=True, include_trace=False)
 
        resource = Resource.create(
@@ -141,3 +142,64 @@ If you want to use **StructlogPlugin** from ``litestar.plugins.structlog`` toget
    :caption: Import processor for extract trace meta
 
    from asgi_monitor.logging.trace_processor import extract_opentelemetry_trace_meta
+
+
+Aiohttp
+====================
+
+Despite the fact that **Aiohttp** does **not support** the **ASGI**-interface, but it is still a popular asynchronous framework and we are happy to support it.
+
+.. code-block:: python
+   :caption: Configuring monitoring for the Aiohttp
+
+   import logging
+
+   from aiohttp.web import Application, run_app
+   from asgi_monitor.integrations.aiohttp import MetricsConfig, TracingConfig, setup_metrics, setup_tracing
+   from asgi_monitor.logging import configure_logging
+   from asgi_monitor.logging.aiohttp import TraceAccessLogger
+   from opentelemetry import trace
+   from opentelemetry.sdk.resources import Resource
+   from opentelemetry.sdk.trace import TracerProvider
+
+   logger = logging.getLogger(__name__)
+
+
+   def create_app() -> Application:
+       configure_logging(level=logging.INFO, json_format=True, include_trace=True)
+
+       resource = Resource.create(
+           attributes={
+               "service.name": "aiohttp",
+           },
+       )
+       tracer_provider = TracerProvider(resource=resource)
+       trace.set_tracer_provider(tracer_provider)
+
+       trace_config = TracingConfig(tracer_provider=tracer_provider)
+       metrics_config = MetricsConfig(app_name="aiohttp")
+
+       app = Application()
+
+       setup_tracing(app=app, config=trace_config)
+       setup_metrics(app=app, config=metrics_config)  # Must be configured last
+
+       return app
+
+
+   if __name__ == "__main__":
+      run_app(create_app(), host="127.0.0.1", port=8000, access_log_class=TraceAccessLogger, access_log=logger)
+
+
+.. important::
+
+   ``TraceAccessLogger`` add trace meta info in aiohttp request log.
+
+
+**Aiohttp** tracing is not **based** on an ``opentelemetry-asgi``, so the ``TracingConfig`` looks like this:
+
+1. ``scope_span_details_extractor`` (**Callable[[Request], tuple[str, dict[str, Any]]]**) - Callback which should return a string and a tuple, representing the desired default span name and a dictionary with any additional span attributes to set.
+
+2. ``meter_provider`` (**MeterProvider | None**) - Optional meter provider to use.
+
+3. ``tracer_provider`` (**TracerProvider | None**) - Optional tracer provider to use.
