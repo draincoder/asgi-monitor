@@ -53,6 +53,7 @@ jobs:
     name: "test ${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
     permissions:
+      issues: write
       pull-requests: write
     strategy:
       matrix:
@@ -99,3 +100,4 @@ jobs:
           junitxml-title: ${{ matrix.python-version }}
           unique-id-for-comment: ${{ matrix.python-version }}
           report-only-changed-files: true
+          create-new-comment: true
