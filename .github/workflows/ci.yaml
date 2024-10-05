@@ -91,7 +91,7 @@ jobs:
       - name: Test coverage comment
         uses: MishaKav/pytest-coverage-comment@main
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           pytest-xml-coverage-path: ./coverage.xml
           junitxml-path: ./junitxml.xml
           junitxml-title: ${{ matrix.python-version }}
