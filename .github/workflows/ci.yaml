@@ -88,11 +88,12 @@ jobs:
       - name: Run tests
         run: pdm run pytest tests --cov=asgi_monitor --junitxml=junitxml.xml --cov-report "xml:coverage.xml"; exit ${PIPESTATUS[0]}
 
-#      - name: Test coverage comment
-#        uses: MishaKav/pytest-coverage-comment@main
-#        with:
-#          pytest-xml-coverage-path: ./coverage.xml
-#          junitxml-path: ./junitxml.xml
-#          junitxml-title: ${{ matrix.python-version }}
-#          unique-id-for-comment: ${{ matrix.python-version }}
-#          report-only-changed-files: true
+      - name: Test coverage comment
+        uses: MishaKav/pytest-coverage-comment@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pytest-xml-coverage-path: ./coverage.xml
+          junitxml-path: ./junitxml.xml
+          junitxml-title: ${{ matrix.python-version }}
+          unique-id-for-comment: ${{ matrix.python-version }}
+          report-only-changed-files: true
