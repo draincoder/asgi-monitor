@@ -172,7 +172,7 @@ def build_tracing_middleware(config: TracingConfig) -> Callable[..., Coroutine]:
     active_requests_counter = meter.create_up_down_counter(
         name=MetricInstruments.HTTP_SERVER_ACTIVE_REQUESTS,
         unit="requests",
-        description="measures the number of concurrent HTTP requests those are currently in flight",
+        description="Measures the number of concurrent HTTP requests those are currently in flight",
     )
     getter = AiohttpGetter()
 
