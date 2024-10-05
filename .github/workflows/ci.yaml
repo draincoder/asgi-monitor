@@ -52,6 +52,8 @@ jobs:
   test:
     name: "test ${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
+    permissions:
+      pull-requests: write
     strategy:
       matrix:
         os:
