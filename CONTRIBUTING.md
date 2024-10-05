@@ -1,54 +1,69 @@
-**Development**
+# Development
+
 After cloning the project, you'll need to set up the development environment. Here are the guidelines on how to do this.
 
-## Virtual Environment with [pdm](https://pdm-project.org/en/latest/)
+The development workflow should look like this:
+- Add feature/fix bug
+- Run tests
+- Add tests
+- Run tests
+- Lint
+- Add docs
+- Open PR
 
-Create a virtual environment in a directory using Python's `.venv` module:
+## Create venv with [PDM](https://pdm-project.org/en/latest/)
 
 ```bash
-pdm use
+pdm venv create 3.10
 ```
-That will create a `./.venv/` directory with Python binaries, allowing you to install packages in an isolated environment.
 
-# Activate the Environment
+## Activate venv
 
 ```bash
-source ./.venv/bin/activate
+source .venv/bin/activate
 ```
-## Installing Dependencies
 
-After activating the virtual environment as described above, run:
+## Install dependencies with [just](https://github.com/casey/just)
 
 ```bash
 just install
 ```
-The link to install [just](https://github.com/casey/just).
-
-If you do not want to install just, then follow these steps:
+or
 ```bash
-    pdm install -G:all
-    pip install -r docs/requirements.txt
-    pre-commit install
+pdm install -G:all
+pip install -r docs/requirements.txt
+pre-commit install
 ```
-## Running Tests
-To run tests with your current **ASGI Monitor** application and Python environment, use:
+
+## Running tests
 
 ```bash
 just test
 ```
-or:
-
+or
 ```bash
 pytest tests --cov=asgi_monitor --cov-append --cov-report term-missing -v
 ```
 
 ## Running lint
-To run lints with your current **ASGI Monitor** application and Python environment, use:
+
 ```bash
 just lint
 ```
-or:
-
+or
 ```bash
 pre-commit run --all-files
 ```
+
+## Build documentation
+
+```bash
+just doc
+```
+or
+```bash
+sphinx-build -M html docs docs-build
+echo "Open file://`pwd`/docs-build/html/index.html"
+```
+
+## We look forward to your contribution!
