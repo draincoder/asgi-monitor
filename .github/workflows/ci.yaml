@@ -52,9 +52,6 @@ jobs:
   test:
     name: "test ${{ matrix.python-version }}"
     runs-on: ${{ matrix.os }}
-    permissions:
-      issues: write
-      pull-requests: write
     strategy:
       matrix:
         os:
@@ -93,8 +90,8 @@ jobs:
 
       - name: Test coverage comment
         uses: MishaKav/pytest-coverage-comment@main
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') || github.event_name == 'pull_request' && github.base_ref == 'master'
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
           pytest-xml-coverage-path: ./coverage.xml
           junitxml-path: ./junitxml.xml
           junitxml-title: ${{ matrix.python-version }}
