@@ -14,6 +14,11 @@ __all__ = ("TraceAccessLogger",)
 
 
 class TraceAccessLogger(AccessLogger):
+    """
+    The heir of the default logging AccessLogger class,
+    which implements the addition of trace meta information to the aiohttp request log.
+    """
+
     def log(self, request: BaseRequest, response: StreamResponse, time: float) -> None:
         if not self.logger.isEnabledFor(logging.INFO):
             # Avoid formatting the log line if it will not be emitted.

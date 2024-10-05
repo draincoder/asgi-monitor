@@ -88,11 +88,7 @@ class MetricsConfig(BaseMetricsConfig):
 
 @dataclass(slots=True, frozen=True)
 class TracingConfig:
-    """
-    Configuration class for the OpenTelemetry middleware.
-    Consult the OpenTelemetry ASGI documentation for more info about the configuration options.
-    https://opentelemetry-python-contrib.readthedocs.io/en/latest/instrumentation/asgi/asgi.html
-    """
+    """Configuration class for the OpenTelemetry middleware."""
 
     scope_span_details_extractor: Callable[[Request], tuple[str, dict[str, Any]]] = _get_default_span_details
     """
@@ -228,6 +224,15 @@ async def get_metrics(request: Request) -> Response:
 
 
 def setup_metrics(app: Application, config: MetricsConfig) -> None:
+    """
+    Set up metrics for an Aiohttp application.
+    This function adds a metrics_middleware to the Aiohttp application with the specified parameters.
+
+    :param Aiohttp app: The Aiohttp application instance.
+    :param MetricsConfig config: Configuration for the metrics.
+    :returns: None
+    """
+
     metrics = build_metrics_manager(config)
     metrics.add_app_info()
 
@@ -243,6 +248,15 @@ def setup_metrics(app: Application, config: MetricsConfig) -> None:
 
 
 def setup_tracing(app: Application, config: TracingConfig) -> None:
+    """
+    Set up tracing for an Aiohttp application.
+    The function adds a tracing_middleware to the Aiohttp application based on TracingConfig.
+
+    :param Aiohttp app: The Aiohttp application instance.
+    :param TracingConfig config: The OpenTelemetry config.
+    :return: None
+    """
+
     app.middlewares.append(build_tracing_middleware(config))
 
 
