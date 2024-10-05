@@ -22,7 +22,7 @@
  - [Prometheus](https://prometheus.io) metrics
  - [OpenTelemetry](https://opentelemetry.io) traces
  - [Structlog](https://www.structlog.org/) logging with native **logging** module support
- - Integrations with [Litestar](https://litestar.dev), [FastAPI](https://fastapi.tiangolo.com) and [Starlette](https://www.starlette.io)
+ - Integrations with [Litestar](https://litestar.dev), [FastAPI](https://fastapi.tiangolo.com), [Starlette](https://www.starlette.io) and [Aiohttp](https://docs.aiohttp.org/en/stable/web.html)
  - Logging support for [Uvicorn](https://www.uvicorn.org) and [Gunicorn](https://gunicorn.org) with custom **UvicornWorker**
 
 > [!IMPORTANT]

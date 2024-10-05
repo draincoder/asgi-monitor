@@ -29,9 +29,9 @@ Configuration
 
 ``BaseTracingConfig`` is a configuration class for the OpenTelemetry middleware, and it accepts the following arguments as input:
 
-1. ``exclude_urls_env_key`` (**str**) - Key to use when checking whether a list of excluded urls is passed via ENV. Each integration module uses its own ``TracingConfig``, where the default value of the **metrics_prefix** corresponds to the name of the integration.
+1. ``exclude_urls_env_key`` (**str**) - Key to use when checking whether a list of excluded urls is passed via ENV. Each integration module uses its own ``TracingConfig``.
 
-2. ``scope_span_details_extractor`` (**Callable[[Any], tuple[str, dict[str, Any]]]**) - Callback which should return a string and a tuple, representing the desired default span name and a dictionary with any additional span attributes to set. Each integration module uses its own ``TracingConfig``, where the default value of the **metrics_prefix** corresponds to the name of the integration.
+2. ``scope_span_details_extractor`` (**Callable[[Any], tuple[str, dict[str, Any]]]**) - Callback which should return a string and a tuple, representing the desired default span name and a dictionary with any additional span attributes to set. Each integration module uses its own ``TracingConfig``.
 
 3. ``server_request_hook_handler`` (**Callable[[Span, dict], None] | None**) - Optional callback which is called with the server span and ASGI scope object for every incoming request.
 

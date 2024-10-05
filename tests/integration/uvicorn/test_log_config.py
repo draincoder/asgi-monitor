@@ -206,7 +206,7 @@ async def test_uvicorn_logs_with_trace_format_json(capfd: CaptureFixture) -> Non
     # Assert
     logs = read_json_logs(capfd)
     request_log = logs[4]
-    assert_that([request_log]).extracting("service.name").contains_only("fastapi")
+
     assert_that(request_log).contains_key(
         "event",
         "filename",

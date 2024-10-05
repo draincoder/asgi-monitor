@@ -14,6 +14,7 @@ from starlette.applications import Starlette
 from starlette.testclient import TestClient
 from uvicorn import Config, Server
 
+from asgi_monitor.integrations.aiohttp import TracingConfig as AioHTTPTraceConfig
 from asgi_monitor.integrations.fastapi import TracingConfig as FastAPITraceConfig
 from asgi_monitor.integrations.litestar import TracingConfig as LitestarTraceConfig
 from asgi_monitor.integrations.starlette import TracingConfig as StarletteTraceConfig
@@ -88,3 +89,17 @@ def build_litestar_tracing_config() -> tuple[LitestarTraceConfig, InMemorySpanEx
     tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
 
     return LitestarTraceConfig(tracer_provider=tracer_provider), exporter
+
+
+def build_aiohttp_tracing_config() -> tuple[AioHTTPTraceConfig, InMemorySpanExporter]:
+    resource = Resource.create(
+        attributes={
+            "service.name": "aiohttp",
+        },
+    )
+    tracer_provider = TracerProvider(resource=resource)
+    trace.set_tracer_provider(tracer_provider)
+    exporter = InMemorySpanExporter()
+    tracer_provider.add_span_processor(SimpleSpanProcessor(exporter))
+
+    return AioHTTPTraceConfig(tracer_provider=tracer_provider), exporter

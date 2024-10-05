@@ -86,13 +86,15 @@ jobs:
         run: echo "PYTHONPATH=$PWD" >> $GITHUB_ENV
 
       - name: Run tests
-        run: pdm run pytest tests --cov=asgi_monitor --junitxml=junitxml.xml --cov-report "xml:coverage.xml"; exit ${PIPESTATUS[0]}
+        run: pdm run pytest tests --cov=asgi_monitor --junitxml=junitxml.xml --cov-report term --cov-report "xml:coverage.xml"; exit ${PIPESTATUS[0]}
 
       - name: Test coverage comment
         uses: MishaKav/pytest-coverage-comment@main
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') || github.event_name == 'pull_request' && github.base_ref == 'master'
         with:
           pytest-xml-coverage-path: ./coverage.xml
           junitxml-path: ./junitxml.xml
           junitxml-title: ${{ matrix.python-version }}
           unique-id-for-comment: ${{ matrix.python-version }}
           report-only-changed-files: true
+          create-new-comment: true
