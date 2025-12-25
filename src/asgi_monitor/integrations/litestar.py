@@ -33,7 +33,8 @@ __all__ = (
 
 
 def _get_default_span_details(scope: Scope) -> tuple[str, dict[str, Any]]:
-    method, path = scope["method"], scope["path"]  # type: ignore[typeddict-item]  # The WebSocket is not supported
+    method = scope["method"]  # type: ignore[typeddict-item]  # The WebSocket is not supported
+    path = scope["path_template"] if scope.get("path_template") else scope["path"]
     return f"{method} {path}", {SpanAttributes.HTTP_ROUTE: path}
 
 
@@ -106,7 +107,7 @@ class MetricsMiddleware(AbstractMiddleware):
         request = Request[Any, Any, Any](scope, receive)
 
         method = request.method
-        path = request.url.path
+        path = scope["path_template"] if scope.get("path_template") else request.url.path
 
         self.metrics.inc_requests_count(method=method, path=path)
         self.metrics.add_request_in_progress(method=method, path=path)

@@ -1,5 +1,7 @@
 import asyncio
+import re
 
+import pytest
 from assertpy import assert_that
 from fastapi import APIRouter, FastAPI
 from prometheus_client import REGISTRY
@@ -15,6 +17,16 @@ router = APIRouter(prefix="")
 async def index() -> dict:
     await asyncio.sleep(0.1)
     return {"hello": "world"}
+
+
+@router.get("/params/{param}")
+async def one_parametrize(param: str) -> dict:
+    return {"result": param}
+
+
+@router.get("/params/{param_a}/{param_b}")
+async def two_parametrize(param_a: str, param_b: str) -> dict:
+    return {"result": [param_a, param_b]}
 
 
 async def test_metrics() -> None:
@@ -69,11 +81,19 @@ async def test_metrics_global_registry() -> None:
         )
 
 
-async def test_metrics_with_tracing() -> None:
+@pytest.mark.parametrize(
+    ("request_path", "expected_template"),
+    [
+        ("/", "/"),
+        ("/params/one", "/params/{param}"),
+        ("/params/one/two", "/params/{param_a}/{param_b}"),
+    ],
+)
+async def test_metrics_with_tracing(request_path: str, expected_template: str) -> None:
     # Arrange
     app = FastAPI()
     app.include_router(router)
-    trace_config, _ = build_fastapi_tracing_config()
+    trace_config, exporter = build_fastapi_tracing_config()
     metrics_config = MetricsConfig(app_name="test", include_metrics_endpoint=False, include_trace_exemplar=True)
 
     setup_metrics(app=app, config=metrics_config)
@@ -81,14 +101,19 @@ async def test_metrics_with_tracing() -> None:
 
     # Act
     async with fastapi_app(app) as client:
-        response = client.get("/")
+        response = client.get(request_path)
 
         # Assert
         assert response.status_code == 200
+        assert all(f"GET {expected_template}" in s.name for s in exporter.get_finished_spans())
+
         metrics = get_latest_metrics(metrics_config.registry, openmetrics_format=True)
+        escaped_template = re.escape(expected_template)
         pattern = (
             r"fastapi_request_duration_seconds_bucket\{"
-            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+            r'app_name="test",le="([\d.]+)",method="GET",path="'
+            + escaped_template
+            + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
         )
         assert_that(metrics.payload.decode()).matches(pattern)
         assert_that(metrics.payload.decode()).contains('fastapi_app_info{app_name="test"} 1.0')

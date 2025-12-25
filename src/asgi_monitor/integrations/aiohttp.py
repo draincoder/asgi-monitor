@@ -116,7 +116,10 @@ def build_metrics_middleware(
         status_code = HTTPInternalServerError.status_code
 
         method = request.method
-        path = request.url.path
+        if request.match_info.route and request.match_info.route.resource:
+            path = request.match_info.route.resource.canonical
+        else:
+            path = request.url.path
 
         before_time = time.perf_counter()
         metrics_manager.inc_requests_count(method=method, path=path)

@@ -1,7 +1,9 @@
 import asyncio
 import json
+import re
 from typing import TYPE_CHECKING, Any, cast
 
+import pytest
 from aiohttp.pytest_plugin import AiohttpClient
 from aiohttp.test_utils import TestClient  # noqa: TCH002
 from aiohttp.web import Application, Request, Response, json_response
@@ -29,6 +31,14 @@ async def zero_division_handler(request: Request) -> Response:
 
 async def json_response_handler(request: Request) -> Response:
     return json_response({"hello": "world"})
+
+
+async def one_parametrize_handler(request: Request) -> Response:
+    return Response(body=json.dumps({"result": request.match_info["param"]}))
+
+
+async def two_parametrize_handler(request: Request) -> Response:
+    return Response(body=json.dumps({"result": [request.match_info["param_a"], request.match_info["param_b"]]}))
 
 
 async def raise_handler(request: Request) -> Response:
@@ -155,20 +165,30 @@ async def test_metrics_get_path(aiohttp_client: AiohttpClient) -> None:
     )
 
 
-async def test_metrics_with_tracing(aiohttp_client: AiohttpClient) -> None:
+@pytest.mark.parametrize(
+    ("request_path", "expected_template"),
+    [
+        ("/", "/"),
+        ("/params/one", "/params/{param}"),
+        ("/params/one/two", "/params/{param_a}/{param_b}"),
+    ],
+)
+async def test_metrics_with_tracing(aiohttp_client: AiohttpClient, request_path: str, expected_template: str) -> None:
     # Arrange
     expected = {
         "http.scheme": "http",
         "http.flavor": "1.1",
-        "http.target": "/",
+        "http.target": request_path,
         "http.method": "GET",
         "net.peer.ip": "127.0.0.1",
-        "http.route": "/",
+        "http.route": expected_template,
         "http.status_code": 200,
     }
 
     app = Application()
     app.router.add_get("/", index_handler)
+    app.router.add_get("/params/{param}", one_parametrize_handler)
+    app.router.add_get("/params/{param_a}/{param_b}", two_parametrize_handler)
 
     trace_cfg, exporter = build_aiohttp_tracing_config()
     metrics_cfg = MetricsConfig(
@@ -183,14 +203,14 @@ async def test_metrics_with_tracing(aiohttp_client: AiohttpClient) -> None:
     client: TestClient = await aiohttp_client(app)
 
     # Act
-    response = await client.get("/")
+    response = await client.get(request_path)
 
     # Assert
     assert response.status == 200
 
     spans = cast("tuple[Span]", exporter.get_finished_spans())
     attrs = cast(dict[str, Any], spans[0].attributes)
-    assert spans[0].name == "GET /"
+    assert spans[0].name == f"GET {expected_template}"
 
     for k, v in expected.items():
         assert attrs[k] == v
@@ -204,9 +224,12 @@ async def test_metrics_with_tracing(aiohttp_client: AiohttpClient) -> None:
     assert response.status == 200
 
     metrics = get_latest_metrics(metrics_cfg.registry, openmetrics_format=True)
+    escaped_template = re.escape(expected_template)
     pattern = (
         r"aiohttp_request_duration_seconds_bucket\{"
-        r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+        r'app_name="test",le="([\d.]+)",method="GET",path="'
+        + escaped_template
+        + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
     )
     assert_that(metrics.payload.decode()).matches(pattern)
     assert_that(metrics.payload.decode()).contains('aiohttp_app_info{app_name="test"} 1.0')

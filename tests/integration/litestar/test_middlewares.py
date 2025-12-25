@@ -1,6 +1,8 @@
 import asyncio
+import re
 from typing import TYPE_CHECKING, cast
 
+import pytest
 from assertpy import assert_that
 from litestar import Litestar, get
 
@@ -27,6 +29,16 @@ async def index() -> dict[str, str]:
 async def error() -> dict[str, float]:
     result = 1 / 0
     return {"result": result}
+
+
+@get("/params/{param:str}")
+async def one_parametrize(param: str) -> dict[str, str]:
+    return {"result": param}
+
+
+@get("/params/{param_a:str}/{param_b:str}")
+async def two_parametrize(param_a: str, param_b: str) -> dict[str, list[str]]:
+    return {"result": [param_a, param_b]}
 
 
 async def test_tracing() -> None:
@@ -112,23 +124,36 @@ async def test_error_metrics() -> None:
         )
 
 
-async def test_metrics_with_tracing() -> None:
+@pytest.mark.parametrize(
+    ("request_path", "expected_template"),
+    [
+        ("/", "/"),
+        ("/params/one", "/params/{param}"),
+        ("/params/one/two", "/params/{param_a}/{param_b}"),
+    ],
+)
+async def test_metrics_with_tracing(request_path: str, expected_template: str) -> None:
     # Arrange
-    trace_config, _ = build_litestar_tracing_config()
+    trace_config, exporter = build_litestar_tracing_config()
     metrics_config = MetricsConfig(app_name="test", include_trace_exemplar=True)
     middlewares = [build_tracing_middleware(trace_config), build_metrics_middleware(metrics_config)]
-    app = Litestar([index], middleware=middlewares)
+    app = Litestar([index, one_parametrize, two_parametrize], middleware=middlewares)
 
     # Act
     async with litestar_app(app) as client:
-        response = client.get("/")
+        response = client.get(request_path)
 
         # Assert
         assert response.status_code == 200
+        assert all(f"GET {expected_template}" in s.name for s in exporter.get_finished_spans())
+
         metrics = get_latest_metrics(metrics_config.registry, openmetrics_format=True)
+        escaped_template = re.escape(expected_template)
         pattern = (
             r"litestar_request_duration_seconds_bucket\{"
-            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+            r'app_name="test",le="([\d.]+)",method="GET",path="'
+            + escaped_template
+            + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
         )
         assert_that(metrics.payload.decode()).matches(pattern)
 
