@@ -207,7 +207,7 @@ async def test_error_metrics() -> None:
 )
 async def test_metrics_with_tracing(request_path: str, expected_template: str) -> None:
     # Arrange
-    trace_config, _ = build_starlette_tracing_config()
+    trace_config, exporter = build_starlette_tracing_config()
     metrics_config = MetricsConfig(app_name="test", include_metrics_endpoint=False, include_trace_exemplar=True)
     app = Starlette(
         routes=[
@@ -226,6 +226,8 @@ async def test_metrics_with_tracing(request_path: str, expected_template: str) -
 
         # Assert
         assert response.status_code == 200
+        assert all(f"GET {expected_template}" in s.name for s in exporter.get_finished_spans())
+
         metrics = get_latest_metrics(metrics_config.registry, openmetrics_format=True)
         escaped_template = re.escape(expected_template)
         pattern = (

@@ -33,7 +33,8 @@ __all__ = (
 
 
 def _get_default_span_details(scope: Scope) -> tuple[str, dict[str, Any]]:
-    method, path = scope["method"], scope["path"]  # type: ignore[typeddict-item]  # The WebSocket is not supported
+    method = scope["method"]  # type: ignore[typeddict-item]  # The WebSocket is not supported
+    path = scope["path_template"] if scope.get("path_template") else scope["path"]
     return f"{method} {path}", {SpanAttributes.HTTP_ROUTE: path}
 
 
