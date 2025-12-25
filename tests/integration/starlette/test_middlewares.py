@@ -1,6 +1,8 @@
 import asyncio
+import re
 from typing import TYPE_CHECKING, cast
 
+import pytest
 from assertpy import assert_that
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -23,6 +25,14 @@ async def index(request: Request) -> JSONResponse:
 async def error(request: Request) -> JSONResponse:
     result = 1 / 0
     return JSONResponse({"result": result})
+
+
+async def one_parametrize(request: Request) -> JSONResponse:
+    return JSONResponse({"result": request.path_params["param"]})
+
+
+async def two_parametrize(request: Request) -> JSONResponse:
+    return JSONResponse({"result": [request.path_params["param_a"], request.path_params["param_b"]]})
 
 
 async def test_tracing() -> None:
@@ -187,25 +197,42 @@ async def test_error_metrics() -> None:
             )
 
 
-async def test_metrics_with_tracing() -> None:
+@pytest.mark.parametrize(
+    ("request_path", "expected_template"),
+    [
+        ("/", "/"),
+        ("/params/one", "/params/{param}"),
+        ("/params/one/two", "/params/{param_a}/{param_b}"),
+    ],
+)
+async def test_metrics_with_tracing(request_path: str, expected_template: str) -> None:
     # Arrange
     trace_config, _ = build_starlette_tracing_config()
     metrics_config = MetricsConfig(app_name="test", include_metrics_endpoint=False, include_trace_exemplar=True)
-    app = Starlette(routes=[Route("/", endpoint=index, methods=["GET"])])
+    app = Starlette(
+        routes=[
+            Route("/", endpoint=index, methods=["GET"]),
+            Route("/params/{param}", endpoint=one_parametrize, methods=["GET"]),
+            Route("/params/{param_a}/{param_b}", endpoint=two_parametrize, methods=["GET"]),
+        ]
+    )
 
     setup_metrics(app=app, config=metrics_config)
     setup_tracing(app=app, config=trace_config)
 
     # Act
     async with starlette_app(app) as client:
-        response = client.get("/")
+        response = client.get(request_path)
 
         # Assert
         assert response.status_code == 200
         metrics = get_latest_metrics(metrics_config.registry, openmetrics_format=True)
+        escaped_template = re.escape(expected_template)
         pattern = (
             r"starlette_request_duration_seconds_bucket\{"
-            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+            r'app_name="test",le="([\d.]+)",method="GET",path="'
+            + escaped_template
+            + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
         )
         assert_that(metrics.payload.decode()).matches(pattern)
 
