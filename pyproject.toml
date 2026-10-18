@@ -2,28 +2,29 @@
 name = "asgi-monitor"
 version = "0.6.1"
 description = "Quick and easy monitoring setup for ASGI application"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
     {name = "treaditup", email = "treaditup@gmail.com"},
 ]
 classifiers = [
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries",
     "Typing :: Typed",
     "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
 dependencies = [
-    "structlog>=24.1.0",
+    "structlog>=22.1.0",
     "prometheus-client>=0.20.0",
-    "opentelemetry-sdk>=1.23.0",
-    "opentelemetry-instrumentation-asgi>=0.44b0",
-    "click>=8.1.7",
+    "opentelemetry-api>=1.26.0",
+    "opentelemetry-instrumentation-asgi>=0.47b0",
+    "click>=8.0.0",
 ]
 
 [project.scripts]
@@ -36,39 +37,74 @@ asgi-monitor = "asgi_monitor.cli:main"
 "Bug Tracker" = "https://github.com/draincoder/asgi-monitor/issues"
 
 [build-system]
-requires = ["setuptools>=61", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["uv_build>=0.13.1,<0.14.0"]
+build-backend = "uv_build"
 
-[tool.pdm.dev-dependencies]
+[dependency-groups]
 lint = [
-    "ruff>=0.2.2",
-    "mypy>=1.8.0",
-    "pre-commit>=3.6.2",
+    "ruff>=0.17.1",
+    "mypy>=2.4.0",
+    "pre-commit>=4.7.0",
 ]
 test = [
-    "pytest>=8.0.2",
-    "pytest-asyncio>=0.23.5",
+    "opentelemetry-sdk>=1.26.0",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
     "pytest-aiohttp>=1.0.5",
-    "pytest-cov>=4.1.0",
+    "pytest-cov>=7.1.0",
     "assertpy>=1.1",
-    "freezegun>=1.4.0",
-    "dirty-equals>=0.7.1.post0",
+    "freezegun>=1.5.5",
+    "dirty-equals>=0.11",
     "httpx>=0.27.0",
+    "httpx2>=2.0.0",
 ]
 asgi = [
-    "aiohttp>=3.10.5",
-    "uvicorn>=0.27.1",
-    "fastapi>=0.110.0",
-    "starlette>=0.36.3",
-    "litestar>=2.7.1",
+    "aiohttp>=3.10.7",
+    "uvicorn>=0.19.0",
+    "fastapi>=0.108.0",
+    "starlette>=0.31.0",
+    "litestar>=2.11.0",
 ]
 wsgi = [
     "gunicorn>=21.2.0",
 ]
+tox = [
+    "tox>=4.67.1",
+    "tox-uv>=1.37.0",
+]
+docs = [
+    "sphinx>=9.0.4,<9.1; python_version < '3.12'",
+    "sphinx>=9.1.0; python_version >= '3.12'",
+    "sphinx-autodocgen>=1.4",
+    "furo>=2025.12.19",
+]
+
+[tool.uv]
+required-version = ">=0.13.1"
+default-groups = "all"
+
+[tool.tox]
+env_list = [
+    "3.11-minimum",
+    "3.11-latest",
+    "3.12-latest",
+    "3.13-latest",
+    "3.14-latest",
+]
+
+[tool.tox.env_run_base]
+runner = "uv-venv-runner"
+package = "wheel"
+dependency_groups = ["test", "asgi", "wsgi"]
+uv_resolution = { replace = "if", condition = "factor.minimum", then = "lowest-direct", else = "highest" }
+deps = [
+    { replace = "ref", of = ["project", "dependencies"], extend = true },
+]
+commands = [["pytest", "tests", "-q", { replace = "posargs", extend = true }]]
 
 [tool.ruff]
 line-length = 120
-target-version="py310"
+target-version="py311"
 src = ["src"]
 include = ["src/**.py", "tests/**.py"]
 exclude = ["examples/real_world/app/main.py", "docs/**.py"]
@@ -93,12 +129,16 @@ lint.ignore = [
     "ISC001",
     "UP035",
     "COM812",
-    "G002"
+    "G002",
+    "CPY001",  # Preserve the existing policy without per-file copyright notices.
+    "RUF022",  # Preserve the existing public export order.
+    "RUF023",  # Preserve the existing slots order.
+    "TC006",   # Allow runtime type expressions in cast().
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["TID252", "PLR2004", "S101", "T201", "SLF001", "PERF203", "S603", "S607"]
-"examples/**" = ["T201", "B018", "INP001"]
+"examples/**" = ["T201", "B018", "INP001", "PLC0415"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 12
@@ -116,7 +156,7 @@ docstring-code-line-length = 88
 
 [tool.mypy]
 packages = ["src", "tests"]
-python_version = "3.10"
+python_version = "3.11"
 
 strict = true
 pretty = true

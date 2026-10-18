@@ -1,3 +1,8 @@
+[paths]
+asgi_monitor =
+    src/asgi_monitor
+    */site-packages/asgi_monitor
+
 [report]
 exclude_lines =
     pragma: no cover

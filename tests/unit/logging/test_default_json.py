@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import structlog
 from _pytest.capture import CaptureFixture
@@ -170,9 +170,9 @@ def test_timestamp_format(capfd: CaptureFixture) -> None:
     # Assert
     [simple_log] = cap_logs
 
-    now = datetime.now(tz=timezone.utc)
+    now = datetime.now(tz=UTC)
     raw_timestamp = simple_log["timestamp"]
-    timestamp = datetime.strptime(raw_timestamp, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=timezone.utc)
+    timestamp = datetime.strptime(raw_timestamp, "%Y-%m-%d %H:%M:%S.%f").replace(tzinfo=UTC)
     assert_that(timestamp).is_close_to(now, timedelta(seconds=2))
 
 

@@ -11,6 +11,13 @@ Tracing
 
 Tracing in **asgi-monitor** is based on OpenTelemetry_ and implemented via the opentelemetry-sdk_.
 
+The library depends on the OpenTelemetry API and ASGI instrumentation. The application
+chooses and configures its SDK and exporters. Install an SDK before using the examples:
+
+.. code-block:: shell
+
+   pip install "opentelemetry-sdk>=1.26.0"
+
 OpenTelemetry
 ~~~~~~~~~~~~~~~~~~
 
@@ -35,9 +42,9 @@ Configuration
 
 3. ``server_request_hook_handler`` (**Callable[[Span, dict], None] | None**) - Optional callback which is called with the server span and ASGI scope object for every incoming request.
 
-4. ``client_request_hook_handler`` (**Callable[[Span, dict], None] | None**) - Optional callback which is called with the internal span and an ASGI scope which is sent as a dictionary for when the method receive is called.
+4. ``client_request_hook_handler`` (**Callable[[Span, dict, dict], None] | None**) - Optional callback which receives the internal span, ASGI scope, and message when the method receive is called.
 
-5. ``client_response_hook_handler`` (**Callable[[Span, dict], None] | None**) - Optional callback which is called with the internal span and an ASGI event which is sent as a dictionary for when the method send is called.
+5. ``client_response_hook_handler`` (**Callable[[Span, dict, dict], None] | None**) - Optional callback which receives the internal span, ASGI scope, and message when the method send is called.
 
 6. ``meter_provider`` (**MeterProvider | None**) - Optional meter provider to use.
 

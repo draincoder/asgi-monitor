@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, cast
 import pytest
 from assertpy import assert_that
 from litestar import Litestar, get
+from prometheus_client import CONTENT_TYPE_LATEST
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import Span
@@ -77,16 +78,19 @@ async def test_tracing() -> None:
         )
 
 
-async def test_metrics() -> None:
+@pytest.mark.parametrize("accept_header", ["", "text/plain; version=1.0.0; escaping=underscores"])
+async def test_metrics(accept_header: str) -> None:
     # Arrange
     expected_content_type = "text/plain; version=0.0.4; charset=utf-8"
+    if accept_header and "version=1.0.0" in CONTENT_TYPE_LATEST:
+        expected_content_type = f"{CONTENT_TYPE_LATEST}; escaping=underscores"
     metrics_config = MetricsConfig(app_name="test", include_trace_exemplar=False)
     app = Litestar(middleware=[build_metrics_middleware(metrics_config)])
     add_metrics_endpoint(app, metrics_config.registry, openmetrics_format=False)
 
     # Act
     async with litestar_app(app) as client:
-        response = client.get("/metrics")
+        response = client.get("/metrics", headers={"Accept": accept_header})
 
         # Assert
         assert response.status_code == 200
@@ -115,10 +119,8 @@ async def test_error_metrics() -> None:
             'litestar_requests_total{app_name="test",method="GET",path="/error"} 1.0',
             'litestar_requests_created{app_name="test",method="GET",path="/error"}',
             'litestar_requests_in_progress{app_name="test",method="GET",path="/error"} 0.0',
-            "litestar_requests_exceptions_total{"
-            'app_name="test",exception_type="UNSET",method="GET",path="/error"} 1.0',
-            "litestar_requests_exceptions_created{"
-            'app_name="test",exception_type="UNSET",method="GET",path="/error"}',
+            'litestar_requests_exceptions_total{app_name="test",exception_type="UNSET",method="GET",path="/error"} 1.0',
+            'litestar_requests_exceptions_created{app_name="test",exception_type="UNSET",method="GET",path="/error"}',
             'litestar_responses_total{app_name="test",method="GET",path="/error",status_code="500"} 1.0',
             'litestar_responses_created{app_name="test",method="GET",path="/error",status_code="500"}',
         )
@@ -153,7 +155,7 @@ async def test_metrics_with_tracing(request_path: str, expected_template: str) -
             r"litestar_request_duration_seconds_bucket\{"
             r'app_name="test",le="([\d.]+)",method="GET",path="'
             + escaped_template
-            + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+            + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+(?:\.\d+)?(?:[eE][+-]?\d+)?) (\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)'
         )
         assert_that(metrics.payload.decode()).matches(pattern)
 
@@ -178,6 +180,7 @@ async def test_metrics_openmetrics_with_tracing() -> None:
         assert metrics.headers["content-type"] == expected_content_type
         pattern = (
             r"litestar_request_duration_seconds_bucket\{"
-            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+            r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} '
+            r"(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?) (\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)"
         )
         assert_that(metrics.content.decode()).matches(pattern)

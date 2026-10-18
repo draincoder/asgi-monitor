@@ -47,13 +47,13 @@ from uvicorn import run
 
 
 def run_app() -> None:
-   app = FastAPI()
-   setup_metrics(app, MetricsConfig(app_name="fastapi"))
-   run(app, host="127.0.0.1", port=8000)
+    app = FastAPI()
+    setup_metrics(app, MetricsConfig(app_name="fastapi"))
+    run(app, host="127.0.0.1", port=8000)
 
 
 if __name__ == "__main__":
-   run_app()
+    run_app()
 ```
 
 After setting up, you can see visualization of default metrics in Grafana

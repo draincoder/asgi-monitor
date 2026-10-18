@@ -63,4 +63,4 @@ After setting up, you can see visualization of default metrics in Grafana_
 Requirements
 ==================
 
-* Python 3.10+
+* Python 3.11+

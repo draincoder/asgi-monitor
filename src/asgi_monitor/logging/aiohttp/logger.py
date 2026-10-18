@@ -31,13 +31,13 @@ class TraceAccessLogger(AccessLogger):
             for key, value in fmt_info:
                 values.append(value)
 
-                if key.__class__ is str:
+                if isinstance(key, str):
                     extra[key] = value
                 else:
-                    k1, k2 = key  # type: ignore[misc]
-                    dct = extra.get(k1, {})  # type: ignore[has-type]
-                    dct[k2] = value  # type: ignore[has-type]
-                    extra[k1] = dct  # type: ignore[has-type]
+                    k1, k2 = key
+                    dct = extra.get(k1, {})
+                    dct[k2] = value
+                    extra[k1] = dct
 
             with contextlib.suppress(KeyError, ValueError):
                 span: Span = request.span  # type: ignore[attr-defined]

@@ -156,7 +156,11 @@ class MetricsMiddleware(AbstractMiddleware):
 async def get_metrics(request: Request) -> Response:
     registry = request.app.state.metrics_registry
     openmetrics_format = request.app.state.openmetrics_format
-    response = get_latest_metrics(registry, openmetrics_format=openmetrics_format)
+    response = get_latest_metrics(
+        registry,
+        openmetrics_format=openmetrics_format,
+        accept_header=request.headers.get("Accept", ""),
+    )
     return Response(
         content=response.payload,
         status_code=response.status_code,
@@ -203,7 +207,7 @@ def add_metrics_endpoint(app: Litestar, registry: CollectorRegistry, *, openmetr
 
     :param Litestar app: The Litestar application instance.
     :param CollectorRegistry registry: The registry for the metrics.
-    :param bool openmetrics_format: A flag indicating whether to generate metrics in OpenMetrics format.
+    :param bool openmetrics_format: Whether to force OpenMetrics instead of negotiating the format.
     :returns: None
     """
 

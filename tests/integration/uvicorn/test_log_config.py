@@ -128,7 +128,10 @@ async def test_uvicorn_logs_with_trace_format_console(capfd: CaptureFixture) -> 
 
     # Act
     async with run_server(config), AsyncClient() as client:
-        await client.get("http://127.0.0.1:8000")
+        await client.get(
+            "http://127.0.0.1:8000",
+            headers={"traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"},
+        )
 
     # Assert
     logs = read_console_logs(capfd)
@@ -201,7 +204,10 @@ async def test_uvicorn_logs_with_trace_format_json(capfd: CaptureFixture) -> Non
 
     # Act
     async with run_server(config), AsyncClient() as client:
-        await client.get("http://127.0.0.1:8000")
+        await client.get(
+            "http://127.0.0.1:8000",
+            headers={"traceparent": "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"},
+        )
 
     # Assert
     logs = read_json_logs(capfd)

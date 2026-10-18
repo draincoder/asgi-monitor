@@ -50,7 +50,7 @@ The ``BaseMetricsConfig`` class is used to configure metrics, and it accepts the
 
 4. ``include_trace_exemplar`` (**bool**) - Whether to include trace exemplars in the metrics. Default is ``False``. This is only necessary if **tracing** is configured and metrics are collected in the ``OpenMetrics`` format.
 
-5. ``openmetrics_format`` (**bool**) - A flag indicating whether to generate metrics in ``OpenMetrics`` format. Default is ``False``.
+5. ``openmetrics_format`` (**bool**) - Force ``OpenMetrics`` output when ``True``. Default is ``False``: prometheus-client_ selects the response format using the request's ``Accept`` header. Without a supported requested format, it falls back to Prometheus text format ``0.0.4``.
 
 
 You can also set up a **global** ``prometheus_client.REGISTRY`` in ``MetricsConfig`` to support your **global** metrics,

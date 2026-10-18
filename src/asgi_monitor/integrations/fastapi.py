@@ -38,7 +38,7 @@ class MetricsConfig(BaseMetricsConfig):
     """Whether to include a /metrics endpoint."""
 
     openmetrics_format: bool = field(default=False)
-    """A flag indicating whether to generate metrics in OpenMetrics format."""
+    """Force OpenMetrics output; otherwise negotiate the format using the request's Accept header."""
 
 
 @dataclass(slots=True, frozen=True)

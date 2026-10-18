@@ -12,6 +12,8 @@ from starlette.routing import Match
 from starlette.status import HTTP_500_INTERNAL_SERVER_ERROR
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable, Iterator
+
     from starlette.applications import Starlette
     from starlette.requests import Request
     from starlette.types import ASGIApp, Receive, Scope, Send
@@ -32,11 +34,21 @@ __all__ = (
 )
 
 
+def _iter_routes(routes: Iterable[Any]) -> Iterator[Any]:
+    """Yield routes with their effective prefixes across FastAPI router layouts."""
+    for route in routes:
+        contexts = getattr(route, "effective_route_contexts", None)
+        if contexts is None:
+            yield route
+        else:
+            yield from contexts()
+
+
 def _get_route_details(scope: Scope) -> str | None:
     app = scope["app"]
     route = None
 
-    for starlette_route in app.routes:
+    for starlette_route in _iter_routes(app.routes):
         match, _ = starlette_route.matches(scope)
         if match == Match.FULL:
             route = starlette_route.path
@@ -60,7 +72,7 @@ def _get_default_span_details(scope: Scope) -> tuple[str, dict[str, Any]]:
 
 
 def _get_path(request: Request) -> tuple[str, bool]:
-    for route in request.app.routes:
+    for route in _iter_routes(request.app.routes):
         match, _ = route.matches(request.scope)
         if match == Match.FULL:
             return route.path, True
@@ -99,15 +111,16 @@ class MetricsConfig(BaseMetricsConfig):
     """Whether to include a /metrics endpoint."""
 
     openmetrics_format: bool = field(default=False)
-    """A flag indicating whether to generate metrics in OpenMetrics format."""
+    """Force OpenMetrics output; otherwise negotiate the format using the request's Accept header."""
 
 
 class TracingMiddleware:
     __slots__ = ("app", "open_telemetry_middleware")
 
-    def __init__(self, app: ASGIApp, config: TracingConfig) -> None:
-        self.app = app
+    def __init__(self, app: ASGIApp, config: BaseTracingConfig) -> None:
         self.open_telemetry_middleware = build_open_telemetry_middleware(app, config)
+        # Keep OpenTelemetry visible in the middleware chain to avoid duplicate instrumentation.
+        self.app = self.open_telemetry_middleware
 
     async def __call__(
         self,
@@ -116,9 +129,10 @@ class TracingMiddleware:
         send: Send,
     ) -> None:
         if scope["type"] != "http":
-            return await self.app(scope, receive, send)
+            await self.open_telemetry_middleware.app(scope, receive, send)
+            return
 
-        return await self.open_telemetry_middleware(scope, receive, send)  # type: ignore[arg-type]
+        await self.app(scope, receive, send)
 
 
 class MetricsMiddleware(BaseHTTPMiddleware):
@@ -183,7 +197,11 @@ class MetricsMiddleware(BaseHTTPMiddleware):
 async def get_metrics(request: Request) -> Response:
     registry = request.app.state.metrics_registry
     openmetrics_format = request.app.state.openmetrics_format
-    response = get_latest_metrics(registry, openmetrics_format=openmetrics_format)
+    response = get_latest_metrics(
+        registry,
+        openmetrics_format=openmetrics_format,
+        accept_header=request.headers.get("Accept", ""),
+    )
     return Response(
         content=response.payload,
         status_code=response.status_code,

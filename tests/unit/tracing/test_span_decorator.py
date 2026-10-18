@@ -1,5 +1,6 @@
 import asyncio
 import time
+from typing import Callable, assert_type
 
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import InMemorySpanExporter
 from opentelemetry.trace import TracerProvider
@@ -17,6 +18,7 @@ def test_simple_span_decorator() -> None:
 
     # Act
     result = action()
+    assert_type(result, int)
 
     # Assert
     assert result == expected
@@ -29,6 +31,7 @@ def test_empty_span_decorator(exporter: InMemorySpanExporter, tracer_provider: T
         time.sleep(0.01)
 
     # Act
+    assert_type(action, Callable[[], None])
     action()
 
     # Assert
@@ -62,6 +65,7 @@ async def test_async_simple_span_decorator(exporter: InMemorySpanExporter, trace
 
     # Act
     result = await action()
+    assert_type(result, int)
 
     # Assert
     assert result == expected
@@ -108,6 +112,7 @@ async def test_nested_spans(exporter: InMemorySpanExporter, tracer_provider: Tra
     @span_decorator(tracer=tracer)
     async def action() -> None:
         num = await count()
+        assert_type(num, int)
         assert num == 1
 
     # Act
