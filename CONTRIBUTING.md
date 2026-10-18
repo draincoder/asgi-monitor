@@ -80,6 +80,9 @@ uv run tox -e 3.14-latest
 ```
 
 Use `uv run tox run --recreate` to resolve fresh dependencies for every environment.
+The workflows in `.github/workflows` separate lint, tests, zizmor, and PR labeling.
+Dependabot checks uv, GitHub Actions, and Docker dependencies weekly; uv updates
+only the lock file, preserving the library's dependency lower bounds.
 CI runs one test job per tox environment daily at 00:00 UTC and on pushes and pull
 requests. Each job recreates its environment and collects coverage and JUnit XML
 in the same test run. Test dependencies are resolved independently of `uv.lock`;

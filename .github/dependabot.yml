@@ -1,0 +1,27 @@
+version: 2
+
+updates:
+  - package-ecosystem: uv
+    directory: /
+    versioning-strategy: lockfile-only
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+      semver-patch-days: 3
+      semver-minor-days: 7
+      semver-major-days: 14
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
+
+  - package-ecosystem: docker
+    directory: /examples/real_world
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 7
