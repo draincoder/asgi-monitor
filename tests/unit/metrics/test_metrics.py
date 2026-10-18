@@ -1,15 +1,16 @@
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from assertpy import assert_that
 from dirty_equals import IsStr
 from freezegun import freeze_time
-from prometheus_client.metrics import Exemplar, Metric, Sample
+from prometheus_client.metrics_core import Metric
+from prometheus_client.samples import Exemplar, Sample
 
 from asgi_monitor.metrics.container import MetricsContainer
 from asgi_monitor.metrics.manager import MetricsManager
 
-FROZEN_DATETIME = datetime(year=2024, month=2, day=28, hour=0, minute=40, second=50, tzinfo=timezone.utc)
+FROZEN_DATETIME = datetime(year=2024, month=2, day=28, hour=0, minute=40, second=50, tzinfo=UTC)
 FROZEN_TIMESTAMP = 1709080850.0
 
 

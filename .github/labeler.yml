@@ -1,0 +1,103 @@
+tests:
+  - changed-files:
+      - any-glob-to-any-file:
+          - tests/**
+
+action:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**
+
+sources:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/**
+
+fastapi:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/integrations/fastapi.py
+          - tests/integration/fastapi/**
+          - examples/fastapi_app.py
+          - examples/real_world/app/**
+
+starlette:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/integrations/starlette.py
+          - tests/integration/starlette/**
+          - examples/starlette_app.py
+
+litestar:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/integrations/litestar.py
+          - tests/integration/litestar/**
+          - examples/litestar_app.py
+
+aiohttp:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/integrations/aiohttp.py
+          - src/asgi_monitor/logging/aiohttp/**
+          - tests/integration/aiohttp/**
+          - examples/aiohttp_app.py
+
+uvicorn:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/logging/uvicorn/**
+          - tests/integration/uvicorn/**
+          - examples/uvicorn_server.py
+
+gunicorn:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/logging/gunicorn/**
+          - tests/unit/logging/test_gunicorn_config.py
+          - examples/gunicorn_server.py
+
+metrics:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/metrics/**
+          - tests/unit/metrics/**
+          - docs/monitoring/metrics.rst
+          - examples/real_world/prometheus/**
+          - examples/real_world/grafana/dashboards/api-metrics.json
+
+tracing:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/tracing/**
+          - tests/unit/tracing/**
+          - docs/monitoring/tracing.rst
+
+logging:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/asgi_monitor/logging/**
+          - tests/unit/logging/**
+          - tests/integration/aiohttp/test_logger.py
+          - tests/integration/uvicorn/test_log_config*.py
+          - docs/monitoring/logging.rst
+          - examples/real_world/loki/**
+          - examples/real_world/vector/**
+
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**
+          - README.md
+          - CONTRIBUTING.md
+
+dependencies:
+  - changed-files:
+      - any-glob-to-any-file:
+          - pyproject.toml
+          - uv.lock
+
+lint:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .pre-commit-config.yaml

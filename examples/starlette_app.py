@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import uvicorn
 from opentelemetry import trace
@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 async def index(request: Request) -> PlainTextResponse:
-    logger.info("Start sleeping at %s", datetime.now(tz=timezone.utc))
+    logger.info("Start sleeping at %s", datetime.now(tz=UTC))
     await asyncio.sleep(1)
-    logger.info("Stopped sleeping at %s", datetime.now(tz=timezone.utc))
+    logger.info("Stopped sleeping at %s", datetime.now(tz=UTC))
     return PlainTextResponse("OK")
 
 

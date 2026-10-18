@@ -44,7 +44,7 @@ def read_json_logs(capfd: CaptureFixture[str]) -> list[dict[Any, Any]] | Any:
         return [json.loads(record) for record in records]
     except JSONDecodeError as error:
         return pytest.fail(
-            "Invalid json log format. Change log format or read as plaint text.\n" f"log record: `{error.doc}`",
+            f"Invalid json log format. Change log format or read as plaint text.\nlog record: `{error.doc}`",
         )
 
 

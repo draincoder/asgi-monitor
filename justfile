@@ -7,23 +7,26 @@ doc_target := "docs-build"
 
 # install all depends for developing
 @install:
-    pdm install -G:all
-    pip install -r docs/requirements.txt
-    pre-commit install
+    uv sync --all-groups
+    uv run pre-commit install
 
-# run tests
+# run tests with the current project environment
 @test:
-    pytest tests --cov=asgi_monitor --cov-append --cov-report term-missing -v
+    uv run pytest tests --cov=asgi_monitor --cov-append --cov-report term-missing -v
+
+# run the full Python and dependency compatibility matrix
+@full-test:
+    uv run tox
 
 # run pre-commit
 @lint:
-    pre-commit run --all-files
+    uv run pre-commit run --all-files
 
 # build documentation
 @doc:
-    sphinx-build -M html {{ doc_source }} {{ doc_target }}
+    uv run sphinx-build -M html {{ doc_source }} {{ doc_target }}
     echo "Open file://`pwd`/{{ doc_target }}/html/index.html"
 
 # clean generated documentation and build cache
 @doc-clean:
-    sphinx-build -M clean {{ doc_source }} {{ doc_target }}
+    uv run sphinx-build -M clean {{ doc_source }} {{ doc_target }}

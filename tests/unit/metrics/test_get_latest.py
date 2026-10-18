@@ -3,8 +3,10 @@ import os
 from multiprocessing import Process
 from pathlib import Path
 
+import pytest
 from assertpy import assert_that
 from dirty_equals import IsBytes
+from prometheus_client import CollectorRegistry, Counter
 
 from asgi_monitor.metrics import get_latest_metrics
 from asgi_monitor.metrics.config import _build_default_registry
@@ -95,3 +97,46 @@ def test_get_latest_metrics_multiprocess(tmpdir: Path, manager: MetricsManager) 
         'test_requests_total{app_name="asgi-monitor",method="GET",path="/token"} 100.0',
         'test_requests_total{app_name="asgi-monitor",method="GET",path="/login"} 100.0',
     )
+
+
+@pytest.mark.parametrize("accept_header", ["", "*/*", "text/plain; version=0.0.4", "application/json"])
+def test_prometheus_format_fallback(accept_header: str) -> None:
+    # Arrange
+    registry = CollectorRegistry()
+    counter = Counter("requests", "Requests", registry=registry)
+    counter.inc()
+
+    # Act
+    response = get_latest_metrics(registry, openmetrics_format=False, accept_header=accept_header)
+
+    # Assert
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] == "text/plain; version=0.0.4; charset=utf-8"
+    assert b"requests_total 1.0\n" in response.payload
+    assert not response.payload.endswith(b"# EOF\n")
+
+
+@pytest.mark.parametrize(
+    ("openmetrics_format", "accept_header"),
+    [
+        (False, "application/openmetrics-text; version=1.0.0"),
+        (True, "text/plain; version=0.0.4"),
+    ],
+)
+def test_openmetrics_exemplars(*, openmetrics_format: bool, accept_header: str) -> None:
+    # Arrange
+    registry = CollectorRegistry()
+    counter = Counter("requests", "Requests", registry=registry)
+    counter.inc(exemplar={"trace_id": "abc123"})
+
+    # Act
+    response = get_latest_metrics(registry, openmetrics_format=openmetrics_format, accept_header=accept_header)
+
+    # Assert
+    assert response.status_code == 200
+    assert response.headers["Content-Type"] in {
+        "application/openmetrics-text; version=1.0.0; charset=utf-8",
+        "application/openmetrics-text; version=1.0.0; charset=utf-8; escaping=underscores",
+    }
+    assert b'requests_total 1.0 # {trace_id="abc123"} 1.0' in response.payload
+    assert response.payload.endswith(b"# EOF\n")

@@ -1,13 +1,18 @@
 import asyncio
 import re
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, cast
 
 import pytest
 from assertpy import assert_that
+from prometheus_client import CONTENT_TYPE_LATEST
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
-from starlette.routing import Route
+from starlette.routing import Route, WebSocketRoute
+from starlette.testclient import TestClient
+from starlette.websockets import WebSocket
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import Span
@@ -33,6 +38,34 @@ async def one_parametrize(request: Request) -> JSONResponse:
 
 async def two_parametrize(request: Request) -> JSONResponse:
     return JSONResponse({"result": [request.path_params["param_a"], request.path_params["param_b"]]})
+
+
+def test_tracing_preserves_websocket_and_lifespan() -> None:
+    # Arrange
+    lifecycle: list[str] = []
+
+    @asynccontextmanager
+    async def lifespan(app: Starlette) -> AsyncIterator[None]:
+        lifecycle.append("startup")
+        yield
+        lifecycle.append("shutdown")
+
+    async def websocket_endpoint(websocket: WebSocket) -> None:
+        await websocket.accept()
+        await websocket.send_text("ok")
+        await websocket.close()
+
+    app = Starlette(lifespan=lifespan, routes=[WebSocketRoute("/ws", websocket_endpoint)])
+    trace_config, exporter = build_starlette_tracing_config()
+    setup_tracing(app, trace_config)
+
+    # Act
+    with TestClient(app) as client, client.websocket_connect("/ws") as websocket:
+        assert websocket.receive_text() == "ok"
+
+    # Assert
+    assert lifecycle == ["startup", "shutdown"]
+    assert not exporter.get_finished_spans()
 
 
 async def test_tracing() -> None:
@@ -143,9 +176,12 @@ async def test_tracing_partial_match() -> None:
         )
 
 
-async def test_metrics() -> None:
+@pytest.mark.parametrize("accept_header", ["", "text/plain; version=1.0.0; escaping=underscores"])
+async def test_metrics(accept_header: str) -> None:
     # Arrange
     expected_content_type = "text/plain; version=0.0.4; charset=utf-8"
+    if accept_header and "version=1.0.0" in CONTENT_TYPE_LATEST:
+        expected_content_type = f"{CONTENT_TYPE_LATEST}; escaping=underscores"
     app = Starlette()
     metrics_config = MetricsConfig(
         app_name="test",
@@ -157,7 +193,7 @@ async def test_metrics() -> None:
 
     # Act
     async with starlette_app(app) as client:
-        response = client.get("/metrics")
+        response = client.get("/metrics", headers={"Accept": accept_header})
 
         # Assert
         assert response.status_code == 200
