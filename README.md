@@ -9,7 +9,7 @@
 
   [![PyPI version](https://badge.fury.io/py/asgi-monitor.svg)](https://pypi.python.org/pypi/asgi-monitor)
   [![Documentation Status](https://readthedocs.org/projects/asgi-monitor/badge/?version=latest)](https://asgi-monitor.readthedocs.io/en/latest/?badge=latest)
-  [![Test](https://github.com/draincoder/asgi-monitor/actions/workflows/ci.yaml/badge.svg)](https://github.com/draincoder/asgi-monitor/actions/workflows/ci.yaml)
+  [![Test](https://github.com/draincoder/asgi-monitor/actions/workflows/test.yaml/badge.svg)](https://github.com/draincoder/asgi-monitor/actions/workflows/test.yaml)
   [![Supported versions](https://img.shields.io/pypi/pyversions/asgi-monitor.svg)](https://pypi.python.org/pypi/asgi-monitor)
   [![Downloads](https://img.shields.io/pypi/dm/asgi-monitor.svg)](https://pypistats.org/packages/asgi-monitor)
   [![License](https://img.shields.io/github/license/draincoder/asgi-monitor)](https://github.com/draincoder/asgi-monitor/blob/master/LICENSE)
@@ -47,13 +47,13 @@ from uvicorn import run
 
 
 def run_app() -> None:
-   app = FastAPI()
-   setup_metrics(app, MetricsConfig(app_name="fastapi"))
-   run(app, host="127.0.0.1", port=8000)
+    app = FastAPI()
+    setup_metrics(app, MetricsConfig(app_name="fastapi"))
+    run(app, host="127.0.0.1", port=8000)
 
 
 if __name__ == "__main__":
-   run_app()
+    run_app()
 ```
 
 After setting up, you can see visualization of default metrics in Grafana

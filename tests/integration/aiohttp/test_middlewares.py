@@ -5,12 +5,12 @@ from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from aiohttp.pytest_plugin import AiohttpClient
-from aiohttp.test_utils import TestClient  # noqa: TCH002
+from aiohttp.test_utils import TestClient  # noqa: TC002
 from aiohttp.web import Application, Request, Response, json_response
 from aiohttp.web_exceptions import HTTPInternalServerError
 from assertpy import assert_that
 from opentelemetry.propagate import inject
-from prometheus_client import REGISTRY
+from prometheus_client import CONTENT_TYPE_LATEST, REGISTRY
 
 if TYPE_CHECKING:
     from opentelemetry.sdk.trace import Span
@@ -45,9 +45,12 @@ async def raise_handler(request: Request) -> Response:
     raise HTTPInternalServerError
 
 
-async def test_metrics(aiohttp_client: AiohttpClient) -> None:
+@pytest.mark.parametrize("accept_header", ["", "text/plain; version=1.0.0; escaping=underscores"])
+async def test_metrics(aiohttp_client: AiohttpClient, accept_header: str) -> None:
     # Arrange
     expected_content_type = "text/plain; version=0.0.4; charset=utf-8"
+    if accept_header and "version=1.0.0" in CONTENT_TYPE_LATEST:
+        expected_content_type = f"{CONTENT_TYPE_LATEST}; escaping=underscores"
 
     app = Application()
 
@@ -63,7 +66,7 @@ async def test_metrics(aiohttp_client: AiohttpClient) -> None:
     client: TestClient = await aiohttp_client(app)
 
     # Act
-    response = await client.get("/metrics")
+    response = await client.get("/metrics", headers={"Accept": accept_header})
 
     # Assert
     assert response.headers["content-type"] == expected_content_type
@@ -229,7 +232,7 @@ async def test_metrics_with_tracing(aiohttp_client: AiohttpClient, request_path:
         r"aiohttp_request_duration_seconds_bucket\{"
         r'app_name="test",le="([\d.]+)",method="GET",path="'
         + escaped_template
-        + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+        + r'"}\ 1.0 # \{TraceID="(\w+)"\} (\d+(?:\.\d+)?(?:[eE][+-]?\d+)?) (\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)'
     )
     assert_that(metrics.payload.decode()).matches(pattern)
     assert_that(metrics.payload.decode()).contains('aiohttp_app_info{app_name="test"} 1.0')
@@ -265,7 +268,8 @@ async def test_metrics_openmetrics_with_tracing(aiohttp_client: AiohttpClient) -
     assert metrics.headers["content-type"] == expected_content_type
     pattern = (
         r"aiohttp_request_duration_seconds_bucket\{"
-        r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} (\d+\.\d+) (\d+\.\d+)'
+        r'app_name="test",le="([\d.]+)",method="GET",path="\/"}\ 1.0 # \{TraceID="(\w+)"\} '
+        r"(\d+(?:\.\d+)?(?:[eE][+-]?\d+)?) (\d+(?:\.\d+)?(?:[eE][+-]?\d+)?)"
     )
     metrics_content = await metrics.text()
     assert_that(metrics_content).matches(pattern)

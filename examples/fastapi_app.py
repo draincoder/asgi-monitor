@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import uvicorn
 from fastapi import APIRouter, FastAPI
@@ -18,9 +18,9 @@ router = APIRouter(prefix="")
 
 @router.get("/")
 async def index() -> str:
-    logger.info("Start sleeping at %s", datetime.now(tz=timezone.utc))
+    logger.info("Start sleeping at %s", datetime.now(tz=UTC))
     await asyncio.sleep(1)
-    logger.info("Stopped sleeping at %s", datetime.now(tz=timezone.utc))
+    logger.info("Stopped sleeping at %s", datetime.now(tz=UTC))
     return "OK"
 
 

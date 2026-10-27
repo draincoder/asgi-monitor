@@ -1,15 +1,15 @@
 default_language_version:
-  python: python3.10
+  python: python3
 
 repos:
   - repo: https://github.com/compilerla/conventional-pre-commit
-    rev: v3.4.0
+    rev: v4.4.0
     hooks:
       - id: conventional-pre-commit
         stages: [commit-msg]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-ast
       - id: check-case-conflict
@@ -21,25 +21,31 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/python-formate/flake8-dunder-all
-    rev: v0.4.1
+    rev: v0.6.0
     hooks:
       - id: ensure-dunder-all
         exclude: "tests*|examples*"
         args: ["--use-tuple"]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.6.1
+    rev: v0.17.1
     hooks:
-      - id: ruff
+      - id: ruff-check
         args: ["--fix"]
       - id: ruff-format
+
+  - repo: https://github.com/zizmorcore/zizmor-pre-commit
+    rev: v1.31.1
+    hooks:
+      - id: zizmor
+        args: [--offline]
 
   - repo: local
     hooks:
       - id: mypy
         name: mypy
-        entry: mypy src tests examples --config-file ./pyproject.toml
-        language: python
+        entry: uv run mypy src tests examples --config-file ./pyproject.toml
+        language: system
         types: [python]
         require_serial: true
         pass_filenames: false

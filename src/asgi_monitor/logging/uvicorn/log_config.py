@@ -134,7 +134,7 @@ def build_uvicorn_log_config(
         default = UvicornDefaultJSONFormatter
         access = UvicornAccessJSONFormatter if not include_trace else TraceUvicornAccessJSONFormatter
     else:
-        default = UvicornDefaultConsoleFormatter  # type: ignore[assignment]
+        default = UvicornDefaultConsoleFormatter
         access = UvicornAccessConsoleFormatter if not include_trace else TraceUvicornAccessConsoleFormatter
 
     return {

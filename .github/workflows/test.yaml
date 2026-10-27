@@ -1,0 +1,78 @@
+name: test
+
+on:
+  schedule:
+    - cron: "0 0 * * *"
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+    branches:
+      - master
+      - develop
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: "test ${{ matrix.tox-env }}"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Publish coverage comments on push commits.
+      pull-requests: write # Publish coverage comments on pull requests.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.11"
+            tox-env: "3.11-minimum"
+          - python-version: "3.11"
+            tox-env: "3.11-latest"
+          - python-version: "3.12"
+            tox-env: "3.12-latest"
+          - python-version: "3.13"
+            tox-env: "3.13-latest"
+          - python-version: "3.14"
+            tox-env: "3.14-latest"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install test runner
+        run: uv sync --locked --only-group tox
+
+      - name: Run tests
+        env:
+          TOX_ENV: ${{ matrix.tox-env }}
+        run: >-
+          uv run --only-group tox tox run --recreate -e "$TOX_ENV" --
+          --cov=asgi_monitor --junitxml=junitxml.xml
+          --cov-report term --cov-report xml:coverage.xml
+
+      - name: Test coverage comment
+        uses: MishaKav/pytest-coverage-comment@9ee59af31bd7bcada1cc496f086b407122602dbd # v1.12.3
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master') || github.event_name == 'pull_request' && github.base_ref == 'master'
+        with:
+          pytest-xml-coverage-path: ./coverage.xml
+          junitxml-path: ./junitxml.xml
+          junitxml-title: ${{ matrix.tox-env }}
+          unique-id-for-comment: ${{ matrix.tox-env }}
+          report-only-changed-files: true
+          create-new-comment: true

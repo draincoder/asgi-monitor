@@ -37,7 +37,7 @@ class AiohttpGetter(Getter):
         return headers.getall(key, None) if headers else None
 
     def keys(self, carrier: Request) -> list[str]:
-        return list(carrier.keys())
+        return list(carrier.headers)
 
 
 def _get_default_span_details(request: Request) -> tuple[str, dict[str, Any]]:
@@ -83,7 +83,7 @@ class MetricsConfig(BaseMetricsConfig):
     """Whether to include a /metrics endpoint."""
 
     openmetrics_format: bool = field(default=False)
-    """A flag indicating whether to generate metrics in OpenMetrics format."""
+    """Force OpenMetrics output; otherwise negotiate the format using the request's Accept header."""
 
 
 @dataclass(slots=True, frozen=True)
@@ -218,7 +218,11 @@ def build_tracing_middleware(config: TracingConfig) -> Callable[..., Coroutine]:
 async def get_metrics(request: Request) -> Response:
     registry = request.app.metrics_registry  # type: ignore[attr-defined]
     openmetrics_format = request.app.openmetrics_format  # type: ignore[attr-defined]
-    response = get_latest_metrics(registry, openmetrics_format=openmetrics_format)
+    response = get_latest_metrics(
+        registry,
+        openmetrics_format=openmetrics_format,
+        accept_header=request.headers.get("Accept", ""),
+    )
     return Response(
         body=response.payload,
         status=response.status_code,

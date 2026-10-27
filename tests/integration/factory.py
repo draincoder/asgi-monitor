@@ -1,5 +1,5 @@
 import asyncio
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import AsyncIterator
 
 from fastapi import FastAPI
@@ -40,13 +40,20 @@ async def run_server(config: Config) -> AsyncIterator[Server]:
     server = Server(config=config)
     task = asyncio.create_task(server.serve())
 
-    await asyncio.sleep(0.1)
-
     try:
+        async with asyncio.timeout(10):
+            while not server.started:
+                if task.done():
+                    await task
+                    raise RuntimeError("Uvicorn stopped before startup")
+                await asyncio.sleep(0.01)
         yield server
     finally:
-        await server.shutdown()
+        if server.started:
+            await server.shutdown()
         task.cancel()
+        with suppress(asyncio.CancelledError):
+            await task
 
 
 def build_fastapi_tracing_config() -> tuple[FastAPITraceConfig, InMemorySpanExporter]:
